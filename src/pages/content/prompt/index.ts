@@ -48,6 +48,12 @@ import { parsePromptImportPayload } from './importPayload';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
 
+import {
+  getNexusButtonElement,
+  startTopBarNexusButton,
+  stopTopBarNexusButton,
+} from './topBarButton';
+
 /**
  * Read the current ChatGPT conversation id in the same `gpt:conv:<uuid>`
  * format that StarredMessagesService stores — without the prefix, every
@@ -337,16 +343,23 @@ function copyText(text: string): Promise<void> {
 }
 
 function computeAnchoredPosition(
-  trigger: HTMLElement,
+  anchor: HTMLElement,
   panel: HTMLElement,
 ): { top: number; left: number } {
-  const rect = trigger.getBoundingClientRect();
+  const rect = anchor.getBoundingClientRect();
   const vw = window.innerWidth;
+  const vh = window.innerHeight;
   const pad = 8;
   const panelW = Math.min(380, Math.max(300, panel.getBoundingClientRect().width || 320));
+  const panelH = panel.getBoundingClientRect().height || 360;
   const tentativeLeft = Math.min(vw - panelW - pad, Math.max(pad, rect.left + rect.width - panelW));
-  const top = Math.max(pad, rect.top - (panel.getBoundingClientRect().height || 360) - 10);
-  return { top, left: Math.round(tentativeLeft) };
+  let top: number;
+  if (rect.top < 150) {
+    top = Math.min(vh - panelH - pad, Math.max(pad, rect.bottom + 8));
+  } else {
+    top = Math.max(pad, rect.top - panelH - 10);
+  }
+  return { top: Math.round(top), left: Math.round(tentativeLeft) };
 }
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
@@ -447,98 +460,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const i18n = createI18n();
 
     // Prevent duplicate injection
-    if (document.getElementById(ID.trigger)) return { destroy: () => {} };
+    if (getNexusButtonElement()) return { destroy: () => {} };
 
-    // Trigger button
-    const trigger = createEl('button', 'gv-pm-trigger');
-    trigger.id = ID.trigger;
-    trigger.setAttribute('aria-label', 'Prompt Manager');
-    const img = document.createElement('img');
-    img.width = 52;
-    img.height = 52;
-    img.alt = 'pm';
-    img.src = getRuntimeUrl('icon-128.png');
-    img.addEventListener(
-      'error',
-      () => {
-        // dev fallback
-        const devUrl = getRuntimeUrl('icon-128.png');
-        if (img.src !== devUrl) img.src = devUrl;
+    // Start top-bar button
+    startTopBarNexusButton({
+      onClick: () => {
+        if (open) closePanel();
+        else {
+          openPanel();
+          renderTags();
+          renderList();
+        }
       },
-      { once: true },
-    );
-    trigger.appendChild(img);
-    document.body.appendChild(trigger);
-    // Helper: place trigger near a target element (e.g. ChatGPT FAB touch target)
-    function placeTriggerNextToHost(): void {
-      try {
-        const candidates = Array.from(
-          document.querySelectorAll('span.mat-mdc-button-touch-target'),
-        ) as HTMLElement[];
-        if (!candidates.length) return;
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const pick = candidates
-          .map((el) => ({ el, r: el.getBoundingClientRect() }))
-          .filter((x) => x.r.width > 0 && x.r.height > 0)
-          // choose the element closest to bottom-right corner
-          .sort((a, b) => a.r.bottom + a.r.right - (b.r.bottom + b.r.right))
-          .reduce((_, x) => x, undefined as { el: HTMLElement; r: DOMRect } | undefined);
-        if (!pick) return;
-        const r = pick.r;
-        const th = trigger.getBoundingClientRect().height || 36;
-        const gap = 10;
-        const right = Math.max(6, Math.round(vw - r.left + gap));
-        const bottom = Math.max(6, Math.round(vh - (r.top + r.height / 2 + th / 2)));
-        trigger.style.right = `${right}px`;
-        trigger.style.bottom = `${bottom}px`;
-      } catch {}
-    }
-
-    // Helper: constrain trigger position to viewport bounds
-    function constrainTriggerPosition(): void {
-      try {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const rect = trigger.getBoundingClientRect();
-        const tw = rect.width || 44;
-        const th = rect.height || 44;
-        const minPad = 6;
-
-        // Parse current position
-        const currentRight = parseFloat(trigger.style.right || '18') || 18;
-        const currentBottom = parseFloat(trigger.style.bottom || '18') || 18;
-
-        // Calculate constraints (ensure at least minPad from edges)
-        const maxRight = vw - tw - minPad;
-        const maxBottom = vh - th - minPad;
-
-        // Constrain position
-        const right = Math.max(minPad, Math.min(currentRight, maxRight));
-        const bottom = Math.max(minPad, Math.min(currentBottom, maxBottom));
-
-        trigger.style.right = `${Math.round(right)}px`;
-        trigger.style.bottom = `${Math.round(bottom)}px`;
-      } catch {}
-    }
-
-    // Restore trigger position if saved; otherwise place next to host button
-    try {
-      const pos = await readStorage<TriggerPosition | null>(STORAGE_KEYS.triggerPos, null);
-      if (pos && Number.isFinite(pos.bottom) && Number.isFinite(pos.right)) {
-        trigger.style.bottom = `${Math.max(6, Math.round(pos.bottom))}px`;
-        trigger.style.right = `${Math.max(6, Math.round(pos.right))}px`;
-        // Constrain position after restore to handle window resize/split screen
-        requestAnimationFrame(constrainTriggerPosition);
-      } else {
-        // defer a bit to wait for host DOM
-        placeTriggerNextToHost();
-        requestAnimationFrame(placeTriggerNextToHost);
-        window.setTimeout(placeTriggerNextToHost, 350);
-      }
-    } catch {
-      placeTriggerNextToHost();
-    }
+    });
 
     // Panel root
     const panel = createEl('div', 'gv-pm-panel gv-hidden');
@@ -1433,8 +1367,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // Restore scroll position after the DOM is laid out. Clamped to the
       // new scrollHeight so a re-filter that shrinks the list doesn't leave
       // us at an impossible offset.
-      const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
-      list.scrollTop = Math.min(savedScrollTop, maxScroll);
       // KaTeX rendered during Markdown step, no post-typeset needed
     }
 
@@ -1447,7 +1379,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (locked && savedPos) {
         // Clamp the saved position to the current viewport. Without this, a
         // panel pinned on a wider screen renders past the edge after the user
-        // narrows the window 鈥?and since dragging/the unlock button are gated
+        // narrows the window ── and since dragging/the unlock button are gated
         // on `!locked`, the user gets stuck. See #635.
         const pad = 8;
         const rect = panel.getBoundingClientRect();
@@ -1459,7 +1391,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         panel.style.top = `${Math.round(top)}px`;
       } else {
         // measure after making visible
-        const pos = computeAnchoredPosition(trigger, panel);
+        const anchor = getNexusButtonElement() || document.body;
+        const pos = computeAnchoredPosition(anchor, panel);
         panel.style.left = `${pos.left}px`;
         panel.style.top = `${pos.top}px`;
       }
@@ -1554,7 +1487,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         }
         return;
       }
-      const pos = computeAnchoredPosition(trigger, panel);
+      const anchor = getNexusButtonElement() || document.body;
+      const pos = computeAnchoredPosition(anchor, panel);
       panel.style.left = `${pos.left}px`;
       panel.style.top = `${pos.top}px`;
     }
@@ -1583,39 +1517,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const y = ev.clientY - dragOffset.y;
         panel.style.left = `${Math.round(x)}px`;
         panel.style.top = `${Math.round(y)}px`;
-      } else if (draggingTrigger) {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const rect = trigger.getBoundingClientRect();
-        const w = rect.width || 36;
-        const h = rect.height || 36;
-        const right = Math.max(6, Math.min(vw - 6 - w, vw - ev.clientX - w / 2));
-        const bottom = Math.max(6, Math.min(vh - 6 - h, vh - ev.clientY - h / 2));
-        trigger.style.right = `${Math.round(right)}px`;
-        trigger.style.bottom = `${Math.round(bottom)}px`;
       }
     }
 
-    // Events
-    trigger.addEventListener('click', async () => {
-      // Suppress click after a drag gesture
-      if (triggerWasDragged) {
-        triggerWasDragged = false;
-        return;
-      }
-
-      if (open) closePanel();
-      else {
-        openPanel();
-        renderTags();
-        renderList();
-      }
-    });
-
-    // Handle window resize - constrain trigger and reposition panel
-    // Handle window resize - constrain trigger and reposition panel
+    // Handle window resize - reposition panel
     const onWindowResize = () => {
-      constrainTriggerPosition();
       onReposition();
       syncTagScrollHint();
     };
@@ -1630,7 +1536,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       const target = ev.target as HTMLElement | null;
       if (!target) return;
       if (target.closest(`#${ID.panel}`)) return;
-      if (target.closest(`#${ID.trigger}`)) return;
+      if (target.closest('[data-gv-nexus-btn]')) return;
       if (target.closest('.gv-pm-confirm')) return;
       // The hover-preview tooltip lives on document.body so users can
       // interact with it (scroll long prompts, select text). Without this
@@ -1678,38 +1584,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     window.addEventListener('pointermove', onDragMove, { passive: true });
     window.addEventListener('pointerup', endDrag, { passive: true });
 
-    // Trigger drag (always draggable)
-    let triggerDragStartPos: { x: number; y: number } | null = null;
-    let triggerWasDragged = false;
-    trigger.addEventListener('pointerdown', (ev: PointerEvent) => {
-      if (typeof ev.button === 'number' && ev.button !== 0) return;
-      draggingTrigger = true;
-      triggerWasDragged = false;
-      triggerDragStartPos = { x: ev.clientX, y: ev.clientY };
-      try {
-        trigger.setPointerCapture?.(ev.pointerId);
-      } catch {}
-    });
-
-    const onTriggerDragEnd = async (ev: PointerEvent) => {
-      if (draggingTrigger) {
-        draggingTrigger = false;
-        // Only save if the trigger actually moved (threshold: 5px)
-        if (triggerDragStartPos) {
-          const dx = Math.abs(ev.clientX - triggerDragStartPos.x);
-          const dy = Math.abs(ev.clientY - triggerDragStartPos.y);
-          if (dx > 5 || dy > 5) {
-            triggerWasDragged = true;
-            const r = parseFloat((trigger.style.right || '').replace('px', '')) || 18;
-            const b = parseFloat((trigger.style.bottom || '').replace('px', '')) || 18;
-            await writeStorage(STORAGE_KEYS.triggerPos, { right: r, bottom: b });
-          }
-        }
-        triggerDragStartPos = null;
-      }
-    };
-    window.addEventListener('pointerup', onTriggerDragEnd, { passive: true });
-
     langSel.addEventListener('change', async () => {
       const next = langSel.value;
       if (!isAppLanguage(next)) return;
@@ -1737,14 +1611,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const shouldHide = changes.gvHidePromptManager.newValue === true;
         pmHiddenByUser = shouldHide;
         pmLogger.info('Hide prompt manager setting changed', { shouldHide });
+        const btn = getNexusButtonElement();
         if (shouldHide) {
-          // Hide trigger and panel
-          trigger.style.display = 'none';
+          if (btn) btn.style.display = 'none';
           panel.classList.add('gv-hidden');
           open = false;
         } else {
-          // Show trigger
-          trigger.style.display = '';
+          if (btn) btn.style.display = '';
         }
       }
       if (area === 'sync' && changes[StorageKeys.PROMPT_INSERT_ON_CLICK]) {
@@ -2160,7 +2033,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           window.removeEventListener('keydown', onWindowKeyDown);
           window.removeEventListener('pointermove', onDragMove);
           window.removeEventListener('pointerup', endDrag);
-          window.removeEventListener('pointerup', onTriggerDragEnd);
           tagsWrap.removeEventListener('scroll', syncTagScrollHint);
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);
@@ -2191,7 +2063,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             favoritesPopover.remove();
           } catch {}
 
-          trigger.remove();
+          stopTopBarNexusButton();
           panel.remove();
           document.querySelectorAll('.gv-pm-confirm').forEach((el) => el.remove());
           document.querySelectorAll('.gv-pm-favorites-popover').forEach((el) => el.remove());

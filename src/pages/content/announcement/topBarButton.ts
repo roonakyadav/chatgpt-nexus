@@ -82,7 +82,7 @@ export function setAnnouncementButtonAvailableListener(cb: ButtonAvailableListen
   }
 }
 
-function buildMegaphoneIcon(): SVGSVGElement {
+function buildBellIcon(): SVGSVGElement {
   const xmlns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(xmlns, 'svg');
   svg.setAttribute('width', '20');
@@ -94,16 +94,16 @@ function buildMegaphoneIcon(): SVGSVGElement {
   svg.setAttribute('stroke-linecap', 'round');
   svg.setAttribute('stroke-linejoin', 'round');
   svg.setAttribute('aria-hidden', 'true');
-  // Megaphone shape — bell-ish silhouette
-  const horn = document.createElementNS(xmlns, 'path');
-  horn.setAttribute('d', 'M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z');
-  svg.appendChild(horn);
-  const wave1 = document.createElementNS(xmlns, 'path');
-  wave1.setAttribute('d', 'M15 7c1.5 1.5 1.5 8 0 10');
-  svg.appendChild(wave1);
-  const wave2 = document.createElementNS(xmlns, 'path');
-  wave2.setAttribute('d', 'M18 4.5c3 3 3 12 0 15');
-  svg.appendChild(wave2);
+  // Lucide Bell icon.
+  const bell = document.createElementNS(xmlns, 'path');
+  bell.setAttribute(
+    'd',
+    'M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326',
+  );
+  svg.appendChild(bell);
+  const clapper = document.createElementNS(xmlns, 'path');
+  clapper.setAttribute('d', 'M10.268 21a2 2 0 0 0 3.464 0');
+  svg.appendChild(clapper);
   return svg;
 }
 
@@ -224,7 +224,7 @@ function injectIfNeeded(): void {
   btn.setAttribute('aria-label', labelRef);
   btn.title = labelRef;
 
-  const icon = buildMegaphoneIcon();
+  const icon = buildBellIcon();
   btn.appendChild(icon);
 
   // Indicator dot — toggled on/off via `applyUnreadState`.
