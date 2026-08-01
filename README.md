@@ -1,146 +1,264 @@
-# ChatGPT nexus
+<div align="center">
 
-ChatGPT nexus is a local browser extension that adapts a nexus-style chat workflow to ChatGPT.
+# ✨ ChatGPT Nexus
 
-This repository contains the source code for a standalone Chrome/Edge extension intended for local development and maintenance.
+### The Ultimate Productivity Extension for ChatGPT
 
+Transform ChatGPT into a powerful workspace with timeline navigation, prompt management, conversation folders, exports, favorites, text pins, layout customization, and dozens of quality-of-life improvements.
 
-## Features
+<br>
 
-- ChatGPT conversation timeline with dot navigation, preview, highlighting, and starred positions.
-- Timeline text pins for long answers: pin exact spots inside a message, switch pins within the selected timeline dot, select pins from the page, and delete pins with an inline delete control.
-- Sidebar folders for organizing conversations locally, with an optional layout that places the folder list below the Projects section (instead of pinned at the top) so it scrolls together with the chat list.
-- Undo a temporary chat: from inside a temporary chat, scrape the transcript and build a handoff prompt that continues it in a normal conversation (delivered inline, or auto-attached as a `.txt` for long chats).
-- Prompt Manager with tags, search, prompt import/export, compact/comfortable display modes, and click-to-copy or click-to-insert behavior.
-- Input enhancements, including input collapse, draft autosave, quote reply, Vim-style input option, Ctrl+Enter send option, and auto-scroll prevention.
-- Markdown, KaTeX/LaTeX, formula copy, and Mermaid rendering support, including mind maps.
-- Conversation export and local backup/import for prompts, folders, settings, and timeline hierarchy.
-- One-click single-conversation export to Markdown or JSON from the chat header (piggybacks ChatGPT's own conversation fetch — no separate API call, no extra permissions). The export button opens a small menu: export the entire conversation, or pick individual messages and export only the selected subset.
-- Cross-conversation favorites: star any user message, jump back to it from the favorites panel even after switching conversations.
-- Layout controls for chat width, font size, input width, sidebar width, and folder spacing.
-- A small support popover with Ko-fi and optional payment QR codes.
+<p align="center">
+<img src="https://img.shields.io/github/stars/pionxzh/chatgpt-nexus?style=for-the-badge&logo=github">
+<img src="https://img.shields.io/github/license/pionxzh/chatgpt-nexus?style=for-the-badge">
+<img src="https://img.shields.io/github/last-commit/pionxzh/chatgpt-nexus?style=for-the-badge">
+<img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white">
+<img src="https://img.shields.io/badge/Edge-Compatible-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white">
+</p>
 
-## Install Locally
+---
 
-Requirements:
+### 🚀 Built for people who practically live inside ChatGPT.
 
-- Node.js 20 or newer.
-- npm.
-- Chrome or Edge with Developer Mode enabled.
+Timeline • Prompt Manager • Favorites • Export • Folders • Text Pins • Rich Markdown • Mermaid • KaTeX • Layout Customization
 
-Install dependencies:
+---
+
+⭐ **If ChatGPT Nexus improves your workflow, consider starring the repository!**
+
+</div>
+
+---
+
+# 📸 Preview
+
+> Replace these placeholders with screenshots or GIFs.
+
+| Timeline | Prompt Manager |
+|-----------|----------------|
+| ![](docs/images/timeline.png) | ![](docs/images/prompt-manager.png) |
+
+| Folder Sidebar | Export |
+|----------------|--------|
+| ![](docs/images/folders.png) | ![](docs/images/export.png) |
+
+---
+
+# Why ChatGPT Nexus?
+
+ChatGPT is an incredible AI assistant—but heavy users quickly discover its limitations.
+
+ChatGPT Nexus fills those gaps by adding productivity tools directly into the ChatGPT interface without changing the way you already work.
+
+Instead of opening dozens of chats, losing important prompts, or endlessly scrolling through conversations, Nexus adds an entirely new productivity layer on top of ChatGPT.
+
+It feels like features that should have existed from day one.
+
+---
+
+# ✨ Features
+
+## 🕒 Timeline Navigation
+
+Navigate huge conversations instantly.
+
+- Visual conversation timeline
+- Dot navigation
+- Hover previews
+- Active message highlighting
+- Star important turns
+- Jump instantly between messages
+- Persistent timeline hierarchy
+
+---
+
+## 📌 Text Pins
+
+Pin precise locations inside long responses.
+
+Perfect for:
+
+- documentation
+- tutorials
+- research
+- debugging
+- books
+- code explanations
+
+Features include:
+
+- Multiple pins per message
+- Previous / Next navigation
+- Delete pins individually
+- Stable across page rerenders
+
+---
+
+## 📂 Conversation Folders
+
+Organize chats like a real workspace.
+
+- Local folders
+- Drag & drop organization
+- Optional placement beneath Projects
+- Persistent storage
+- Native ChatGPT appearance
+
+---
+
+## 📝 Prompt Manager
+
+A complete prompt library built into ChatGPT.
+
+✔ Search
+
+✔ Tags
+
+✔ Favorites
+
+✔ Import / Export
+
+✔ Compact mode
+
+✔ Comfortable mode
+
+✔ Click-to-copy
+
+✔ Click-to-insert
+
+✔ Backup
+
+---
+
+## ⭐ Cross-Conversation Favorites
+
+Bookmark important prompts forever.
+
+- Favorite any user message
+- Jump back instantly
+- Works across conversations
+- Searchable
+- Persistent
+
+---
+
+## 📤 Conversation Export
+
+Export conversations in multiple formats.
+
+Supported formats:
+
+- Markdown
+- Simplified Markdown
+- JSON
+- Simplified JSON
+- HTML
+
+Export either:
+
+- Entire conversation
+
+or
+
+- Selected messages only
+
+---
+
+## 🧠 Rich Rendering
+
+Native support for:
+
+- Markdown
+- KaTeX
+- LaTeX
+- Mermaid
+- Mind Maps
+- Formula Copy
+- Syntax Highlighting
+
+---
+
+## ⚡ Productivity Enhancements
+
+- Draft autosave
+- Ctrl + Enter to send
+- Quote reply
+- Vim mode
+- Auto-scroll prevention
+- Input collapse
+- Layout customization
+
+---
+
+# 🎯 Designed for
+
+- Developers
+- Researchers
+- Students
+- Writers
+- Prompt Engineers
+- AI Power Users
+- Teams
+
+---
+
+# 📦 Installation
+
+## Requirements
+
+- Node.js 20+
+- npm
+- Chrome or Microsoft Edge
+
+Clone the repository
+
+```bash
+git clone https://github.com/USERNAME/chatgpt-nexus.git
+
+cd chatgpt-nexus
+```
+
+Install dependencies
 
 ```bash
 npm install
 ```
 
-Build the Chrome/Edge extension:
+Build
 
 ```bash
 npm run build:chrome
 ```
 
-Load the unpacked extension:
+Open
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Enable Developer Mode.
-3. Click `Load unpacked`.
-4. Select the generated `dist_chrome` folder.
-5. Open or refresh `https://chatgpt.com`.
+```
+chrome://extensions
+```
 
-During development, rebuild after code changes and refresh the unpacked extension from the browser extensions page.
+Enable
 
-## Common Commands
+```
+Developer Mode
+```
+
+Load
+
+```
+dist_chrome
+```
+
+Refresh ChatGPT.
+
+You're done.
+
+---
+
+# 🛠 Common Commands
 
 ```bash
+npm install
 npm run typecheck
 npm run test
 npm run build:chrome
 ```
-
-Other platform build scripts are kept from the upstream project, but the actively maintained target for this fork is Chrome/Edge on ChatGPT.
-
-## Recent Updates
-
-### 1.6.9
-
-- **Performance fix.** The 1.6.8 rule that hides ChatGPT's native prompt-TOC minimap used a `body:has(…)` selector that re-evaluated on every DOM mutation — on ChatGPT's streaming/virtualising page this caused page-wide style-recalc jank (laggy timeline hover/preview, slow jump, occasional "message not loaded"). Replaced with a plain compound-class selector that carries no `:has()` invalidation cost.
-- **Timeline on/off toggle.** The popup's Timeline section now has a real *Enable timeline* switch (distinct from "Hide outer container", which only hid the background bar). Toggles live without a reload.
-- The native prompt-TOC is now hidden **only while our timeline is active** (gated on a body class the timeline owns) — disable the timeline and ChatGPT's native nav comes back, instead of leaving you with neither.
-
-### 1.6.8
-
-- **Partial conversation export.** The top-bar export button now opens a small menu with two choices: *Entire conversation* (the existing one-click export) or *Select & export*. The latter enters a selection mode — tick individual messages (with "Select all" / "Only you" / "Only ChatGPT" helpers) and download only the chosen subset. Selection is keyed off the on-screen `data-message-id`, which maps 1:1 to the captured API messages, so it reuses the exact same exporters and format choice as the full export.
-- Hide ChatGPT's native right-edge "prompt table of contents" minimap while the nexus timeline is active — the two pinned to the same edge and overlapped into a jagged bar. Disabling the timeline brings the native one back.
-
-### 1.6.7
-
-- **Folder placement option.** A new setting (folder section of the popup) moves the sidebar folder list out of its pinned top position to below ChatGPT's "Projects" section and above "Recent", where it scrolls together with the chat list as a same-level section. Off by default — the folder panel keeps its original pinned-at-top behavior unless you opt in.
-
-### 1.6.6
-
-- **Undo temporary chat.** Temporary chats have no export API, so this works by DOM-scraping the on-screen transcript and assembling a handoff prompt that asks the model to continue the conversation in a normal (non-temporary) chat — preserving persona, tone, and context. Short transcripts are placed inline in the composer; longer ones are delivered via a synthetic paste event so ChatGPT auto-converts them to a `.txt` attachment (the prompt tells the model the attachment is Markdown source so replies keep their formatting). You review the result before sending.
-
-### 1.6.1
-
-- **Conversation export now has format choices in the popup.** A new "Conversation export" section in the extension settings lets you pick between five formats: Standard Markdown (the 1.6.0 default, lossless), Simplified Markdown, Standard JSON, Simplified JSON, and HTML.
-- **Simplified variants strip the "model thinking" noise** that users were reporting in the standard export. Under the hood, ChatGPT's conversation payload includes a lot more than the final answer — Code Interpreter's Python source (sometimes 30+ KB per turn), the model's pre-tool narration ("I'll build a single-file HTML page..."), tool execution output, and intermediate reasoning blocks. The simplified formats keep only three things: your messages, the model's final reply, and timestamps. The standard formats are unchanged so existing archives keep working.
-- **HTML export** produces a single self-contained file with inlined CSS, light/dark auto-adapt, and proper HTML escaping. Double-click to read in any browser, no extension needed.
-- **Filter is fail-closed**: unknown assistant content types (anything ChatGPT might add in the future) are dropped from the simplified output by default — better to be missing a new feature than to leak garbled internal blocks into an archive.
-
-### 1.6.0
-
-- **One-click single-conversation export** from a new button in the chat top bar next to ChatGPT's own Share control. Output is Markdown or JSON; filename follows `chatgpt-<slug>-<YYYYMMDD>.{md|json}`. The exporter walks ChatGPT's conversation `mapping` (current_node → parent chain → reverse) so branched / edited threads always export the *currently shown* path, not the full tree.
-- **Silent API cache primer.** A page-world fetch/XHR hook (runs in MAIN world via a dedicated content script at `document_start`) listens for ChatGPT's own `/backend-api/conversation/<uuid>` calls, bridges the parsed payload into the extension via `window.postMessage` (+ a sessionStorage fallback for the cold-start case where the content-script hasn't booted yet), and pre-fills the timeline's TurnTextCache for every user turn. Effect: opening a long conversation now shows correct dot tooltips and preview-panel rows immediately, instead of waiting for the user to scroll past each turn to populate it.
-
-### 1.5.4
-
-- Persistent turn-text cache. The timeline now persists each user turn's `{summary, attachments, hasGeneratedImage}` snapshot per conversation in localStorage (`gptTimelineTurnTextCache:<conversationId>`), capped at 500 entries per conversation and 80 conversations globally with LRU eviction. ChatGPT aggressively virtualises far-away message bodies, which used to leave the timeline dot tooltips and preview-panel rows blank until the user scrolled past every turn at least once. With the cache populated, the same data survives page reload, route change, and ChatGPT's own virtualisation.
-- Edit detection via content fingerprints: each cached entry carries a stable hash of `(summary + attachment names)`. If a turn's live fingerprint diverges from the cached one (user edited, assistant regenerated), the cache invalidates that single entry — no full-cache wipes, no fragile DOM-timing heuristics.
-- Click-jump animation now has a spring-overshoot pass so the active dot settles into place visibly instead of snapping.
-- Unmounted-turn placeholders: the preview panel shows a soft placeholder row for turns whose body ChatGPT has unmounted, so the panel's vertical scroll position stays stable as virtualisation toggles.
-
-### 1.5.3
-
-- Sticky markers: timeline dots now survive ChatGPT's mid-conversation virtualisation pass. Previously, dots could vanish briefly when ChatGPT unmounted a turn's outer wrapper during fast scroll; now we keep a phantom marker pinned at the last known anchor until either the wrapper re-mounts or the conversation reconciles to confirm the turn is actually gone.
-
-### 1.5.2
-
-- Folder sidebar mounted inside ChatGPT's native sticky nav block, picking up ChatGPT's own design tokens so spacing/colors match the surrounding "New chat" / "Search chats" rows. Side effects: folders now scroll-stick correctly with the rest of the sidebar header, and the "⋯" menu glyph is centered with proper hover affordance instead of nudging on click.
-
-### 1.5.1
-
-- One-click favorites in the preview panel: each row has a star toggle so you can pin a message to your favorites list without long-pressing the dot.
-- Timeline dots now layer multiple signals without stepping on each other: the active highlight reads on pin dots, favorites show a gold ★ inside the dot, file attachments paint a thin colored capsule on the left side of the bar (one per attachment, up to two), and a generated image in the reply takes that slot over with a small photo icon.
-
-### 1.5.0
-
-- File-attachment chips in the timeline. Turns that contain a PDF, Word doc, spreadsheet, pasted text blob, image, … now show a small colored pill in front of the body text (red for PDF, blue for Word, green for spreadsheets, gray for plain text, etc.), so the dot tooltip and preview panel no longer confuse the filename with the user's actual question. Dot tooltips use a minimal colored-dot + label variant; the preview panel uses the boxed pill.
-- Stripped ChatGPT's own chrome text (the "展开收起" toggle, the "文档"/"Document" tile label) out of every turn summary so the dot aria-label and tooltip read exactly what the user typed.
-- Pin text capture now avoids LaTeX source and host-chrome noise — pinning inside or near a KaTeX block records the rendered text rather than `\boxed{…}`.
-- Prompt Manager header lets the title stay full-width on narrow panels by wrapping the version pill / language toggle to a second row instead of clipping "GPT-nexus" to "GPT-Voy…".
-- One-shot purge of leftover `geminiTimeline*` localStorage keys from old storage schema versions.
-- Repainted the timeline left-handle accent in the project's purple so the last bit of ChatGPT-green leaked into the bar is gone.
-
-### 1.4.17
-
-- Click-jump between timeline dots now uses the browser's native compositor-driven smooth scroll, matching the feel of a real wheel scroll instead of a hand-rolled requestAnimationFrame loop. Adjacent-dot clicks went from ~25fps to baseline display refresh.
-- Scroll listener short-circuits heavy sync work while a click-jump is in flight; pin badges still track the page so they stay anchored during the animation.
-
-### 1.4.15
-
-- Timeline dot IDs now use ChatGPT's native message UUID instead of a numeric sequence. New turns ChatGPT lazy-loads into the middle of a conversation no longer produce hash-suffixed ghost dots ("u-12-1a6zsk2") that look like jump-in entries.
-
-### 1.4.8
-
-- Timeline text pins: pin exact spots inside a long ChatGPT answer, navigate between them with up/down controls scoped to the selected dot, and delete pins inline. Pin ownership binds to stable turn IDs so they survive scrolling and DOM re-renders.
-
-## Privacy Notes
-
-ChatGPT nexus stores its feature data in the browser extension storage on the user's machine. It does not ship account sync, remote analytics, or remote code loading.
-
-## License And Attribution
-
-This repository is a local project source. It does not include upstream ownership metadata or attribution in the repository files.
-
-Third-party dependencies may still carry their own licenses, and those licenses remain in the dependency metadata.
