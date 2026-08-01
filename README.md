@@ -261,7 +261,7 @@ npm install
 npm run typecheck
 npm run test
 
----
+```
 
 # 🚀 Feature Deep Dive
 
