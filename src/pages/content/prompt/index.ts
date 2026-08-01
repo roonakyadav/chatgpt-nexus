@@ -26,13 +26,7 @@ import {
 } from '@/pages/content/timeline/hierarchyStorage';
 import { normalizeTimelineHierarchyData } from '@/pages/content/timeline/hierarchyTypes';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
-import {
-  APP_LANGUAGES,
-  APP_LANGUAGE_LABELS,
-  type AppLanguage,
-  isAppLanguage,
-  normalizeLanguage,
-} from '@/utils/language';
+import { type AppLanguage } from '@/utils/language';
 import type { TranslationKey } from '@/utils/translations';
 
 import { insertTextIntoChatInput } from '../chatInput/index';
@@ -566,23 +560,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     titleRow.appendChild(versionBadge);
     const controls = createEl('div', 'gv-pm-controls');
 
-    const langSel = createEl('select', 'gv-pm-lang');
-    for (const lang of APP_LANGUAGES) {
-      const opt = createEl('option');
-      opt.value = lang;
-      opt.textContent = APP_LANGUAGE_LABELS[lang];
-      langSel.appendChild(opt);
-    }
-    // Set initial language value asynchronously
-    i18n
-      .get()
-      .then((lang) => {
-        langSel.value = lang;
-      })
-      .catch(() => {
-        langSel.value = 'en';
-      });
-
     const addBtn = createEl('button', 'gv-pm-add');
     addBtn.textContent = i18n.t('pm_add');
 
@@ -590,7 +567,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     viewModeBtn.setAttribute('type', 'button');
     // Title, aria-label, and data-icon are set in applyViewModeUI() below.
 
-    controls.appendChild(langSel);
     controls.appendChild(addBtn);
     header.appendChild(titleRow);
     header.appendChild(controls);
@@ -660,13 +636,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     favoritesBtn.setAttribute('aria-expanded', 'false');
     favoritesBtn.title = i18n.t('favoritesSidebarTitle');
     favoritesBtn.setAttribute('aria-label', i18n.t('favoritesSidebarTitle'));
+    favoritesBtn.style.marginTop = '2px';
     const favoritesIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     favoritesIcon.setAttribute('viewBox', '0 0 24 24');
-    favoritesIcon.setAttribute('width', '14');
-    favoritesIcon.setAttribute('height', '14');
+    favoritesIcon.setAttribute('width', '20');
+    favoritesIcon.setAttribute('height', '20');
     favoritesIcon.setAttribute('fill', 'currentColor');
     favoritesIcon.setAttribute('stroke', 'currentColor');
-    favoritesIcon.setAttribute('stroke-width', '1.4');
+    favoritesIcon.setAttribute('stroke-width', '2.5');
     favoritesIcon.setAttribute('stroke-linejoin', 'round');
     favoritesIcon.setAttribute('stroke-linecap', 'round');
     favoritesIcon.setAttribute('aria-hidden', 'true');
@@ -1473,13 +1450,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     };
     window.addEventListener('keydown', onWindowKeyDown, { passive: true });
 
-    langSel.addEventListener('change', async () => {
-      const next = langSel.value;
-      if (!isAppLanguage(next)) return;
-      await i18n.set(next);
-      refreshUITexts();
-    });
-
     // Listen to external language changes (popup/options)
     // Note: The centralized i18n system already handles storage changes,
     // we just need to update the UI when language changes
@@ -1490,9 +1460,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // Handle language changes from sync storage
       const nextRaw = changes[StorageKeys.LANGUAGE]?.newValue;
       if (area === 'sync' && typeof nextRaw === 'string') {
-        try {
-          langSel.value = normalizeLanguage(nextRaw);
-        } catch {}
         refreshUITexts();
       }
       // Handle hide prompt manager setting changes
