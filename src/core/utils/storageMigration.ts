@@ -24,7 +24,7 @@ export interface MigrationResult {
  * @example
  * ```typescript
  * const result = await migrateFromLocalStorage(
- *   [StorageKeys.PROMPT_ITEMS, StorageKeys.PROMPT_PANEL_POSITION],
+ *   [StorageKeys.PROMPT_ITEMS],
  *   promptStorageService,
  *   { deleteAfterMigration: false }
  * );

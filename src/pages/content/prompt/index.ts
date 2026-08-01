@@ -126,13 +126,8 @@ type PromptItem = {
   name?: string;
 };
 
-type PanelPosition = { top: number; left: number };
-type TriggerPosition = { bottom: number; right: number };
-
 const STORAGE_KEYS = {
   items: StorageKeys.PROMPT_ITEMS,
-  position: StorageKeys.PROMPT_PANEL_POSITION,
-  triggerPos: StorageKeys.PROMPT_TRIGGER_POSITION,
   language: StorageKeys.LANGUAGE, // reuse global language key
   theme: StorageKeys.PROMPT_THEME,
 } as const;
@@ -412,8 +407,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     try {
       const keysToMigrate = [
         STORAGE_KEYS.items,
-        STORAGE_KEYS.position,
-        STORAGE_KEYS.triggerPos,
       ];
 
       const migrationResult = await migrateFromLocalStorage(keysToMigrate, promptStorageService, {
@@ -480,7 +473,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Build panel DOM
     const header = createEl('div', 'gv-pm-header');
-    const dragHandle = createEl('div', 'gv-pm-drag');
 
     const titleRow = createEl('div', 'gv-pm-title-row');
     const title = createEl('div', 'gv-pm-title');
@@ -600,7 +592,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     controls.appendChild(langSel);
     controls.appendChild(addBtn);
-    header.appendChild(dragHandle);
     header.appendChild(titleRow);
     header.appendChild(controls);
 
@@ -812,10 +803,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let items: PromptItem[] = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
     let open = false;
     let selectedTags: Set<string> = new Set<string>();
-    let savedPos = await readStorage<PanelPosition | null>(STORAGE_KEYS.position, null);
-    let dragging = false;
-    let dragOffset = { x: 0, y: 0 };
-    let draggingTrigger = false;
     let editingId: string | null = null;
     let expandedItems: Set<string> = new Set<string>(); // Track expanded prompt items
     let viewMode: PMViewMode = 'compact';
@@ -1446,32 +1433,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       panel.style.top = `${pos.top}px`;
     }
 
-    function beginDrag(ev: PointerEvent): void {
-      dragging = true;
-      const rect = panel.getBoundingClientRect();
-      dragOffset = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-      try {
-        panel.setPointerCapture?.(ev.pointerId);
-      } catch {}
-    }
-
-    async function endDrag(_ev: PointerEvent): Promise<void> {
-      if (!dragging) return;
-      dragging = false;
-      const rect = panel.getBoundingClientRect();
-      savedPos = { left: rect.left, top: rect.top };
-      await writeStorage(STORAGE_KEYS.position, savedPos);
-    }
-
-    function onDragMove(ev: PointerEvent): void {
-      if (dragging) {
-        const x = ev.clientX - dragOffset.x;
-        const y = ev.clientY - dragOffset.y;
-        panel.style.left = `${Math.round(x)}px`;
-        panel.style.top = `${Math.round(y)}px`;
-      }
-    }
-
     // Handle window resize - reposition panel
     const onWindowResize = () => {
       onReposition();
@@ -1511,13 +1472,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (ev.key === 'Escape') closePanel();
     };
     window.addEventListener('keydown', onWindowKeyDown, { passive: true });
-
-    panel.addEventListener('pointerdown', (ev: PointerEvent) => {
-      const target = ev.target as HTMLElement;
-      if (target.closest('.gv-pm-drag')) beginDrag(ev);
-    });
-    window.addEventListener('pointermove', onDragMove, { passive: true });
-    window.addEventListener('pointerup', endDrag, { passive: true });
 
     langSel.addEventListener('change', async () => {
       const next = langSel.value;
@@ -1966,8 +1920,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           window.removeEventListener('scroll', onReposition);
           window.removeEventListener('pointerdown', onWindowPointerDown, { capture: true });
           window.removeEventListener('keydown', onWindowKeyDown);
-          window.removeEventListener('pointermove', onDragMove);
-          window.removeEventListener('pointerup', endDrag);
           tagsWrap.removeEventListener('scroll', syncTagScrollHint);
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);

@@ -53,8 +53,6 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: false,
   [StorageKeys.SIDEBAR_WIDTH]: 312,
   [StorageKeys.SIDEBAR_WIDTH_ENABLED]: false,
-  [StorageKeys.PROMPT_PANEL_POSITION]: null,
-  [StorageKeys.PROMPT_TRIGGER_POSITION]: null,
   [StorageKeys.PROMPT_CUSTOM_WEBSITES]: [],
   [StorageKeys.PROMPT_THEME]: null,
   [StorageKeys.PROMPT_VIEW_MODE]: 'compact',
