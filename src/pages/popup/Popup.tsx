@@ -5,14 +5,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import browser from 'webextension-polyfill';
 
 import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
-import {
-  DEFAULT_SUPPORT_GOAL,
-  SUPPORT_GOAL_REFRESH_MS,
-  type SupportGoalData,
-  formatSupportAmount,
-  getSupportGoalProgress,
-  loadSupportGoal,
-} from '@/core/services/SupportGoalService';
 import { StorageKeys } from '@/core/types/common';
 import {
   DEFAULT_SINGLE_CONV_EXPORT_FORMAT,
@@ -117,157 +109,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <CardTitle className="mb-3">{title}</CardTitle>
       <CardContent className="space-y-2 p-0">{children}</CardContent>
     </Card>
-  );
-}
-
-function SupportPopover({ label }: { label: string }) {
-  const [open, setOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);
-  const [goal, setGoal] = useState<SupportGoalData>(DEFAULT_SUPPORT_GOAL);
-  const closeTimerRef = useRef<number | null>(null);
-  const hoveringButtonRef = useRef(false);
-  const hoveringPopoverRef = useRef(false);
-  const progress = getSupportGoalProgress(goal);
-
-  const clearCloseTimer = () => {
-    if (closeTimerRef.current === null) return;
-    window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = null;
-  };
-
-  const openPopover = () => {
-    clearCloseTimer();
-    setOpen(true);
-  };
-
-  const scheduleClose = () => {
-    clearCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => {
-      if (!pinned && !hoveringButtonRef.current && !hoveringPopoverRef.current) {
-        setOpen(false);
-      }
-    }, 180);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    const refresh = (force = false) =>
-      void loadSupportGoal({ force }).then((data) => {
-        if (!cancelled) setGoal(data);
-      });
-
-    refresh();
-    const interval = window.setInterval(() => refresh(true), SUPPORT_GOAL_REFRESH_MS);
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [open]);
-
-  useEffect(() => () => clearCloseTimer(), []);
-
-  const visible = open && goal.enabled;
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        className="hover:text-primary font-semibold transition-colors"
-        onMouseEnter={() => {
-          hoveringButtonRef.current = true;
-          openPopover();
-        }}
-        onMouseLeave={() => {
-          hoveringButtonRef.current = false;
-          scheduleClose();
-        }}
-        onClick={() => {
-          setPinned((value) => {
-            const next = !value;
-            if (next) openPopover();
-            else if (!hoveringButtonRef.current && !hoveringPopoverRef.current) setOpen(false);
-            return next;
-          });
-        }}
-      >
-        {label}
-      </button>
-      {visible ? (
-        <div
-          className="bg-popover text-popover-foreground border-border absolute right-0 bottom-6 z-50 w-80 rounded-lg border p-4 text-left shadow-xl"
-          onMouseEnter={() => {
-            hoveringPopoverRef.current = true;
-            openPopover();
-          }}
-          onMouseLeave={() => {
-            hoveringPopoverRef.current = false;
-            scheduleClose();
-          }}
-        >
-          <div className="mb-3">
-            <p className="text-sm font-bold">{goal.title}</p>
-            <p className="text-muted-foreground mt-1 text-xs leading-relaxed">{goal.description}</p>
-          </div>
-          {goal.imageUrl ? (
-            <img
-              src={goal.imageUrl}
-              alt={goal.title}
-              className="border-border bg-muted mb-3 max-h-36 w-full rounded-md border object-cover"
-            />
-          ) : null}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span>
-                {formatSupportAmount(goal.current, goal.currency)} /{' '}
-                {formatSupportAmount(goal.target, goal.currency)}
-              </span>
-              <span>{progress}%</span>
-            </div>
-            <div className="bg-muted h-2 overflow-hidden rounded-full">
-              <div
-                className="bg-primary h-full rounded-full transition-[width]"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3">
-            <a
-              href={goal.kofiUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center rounded-md px-3 text-xs font-bold transition-colors"
-            >
-              Ko-fi
-            </a>
-          </div>
-          {goal.wechatQrUrl || goal.alipayQrUrl ? (
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              {goal.wechatQrUrl ? (
-                <div className="border-border bg-muted/40 text-muted-foreground flex flex-col items-center justify-center overflow-hidden rounded-md border text-center text-[11px] leading-tight">
-                  <img
-                    src={goal.wechatQrUrl}
-                    alt="WeChat QR"
-                    className="aspect-square w-full object-cover"
-                  />
-                  <span className="py-1">WeChat Pay</span>
-                </div>
-              ) : null}
-              {goal.alipayQrUrl ? (
-                <div className="border-border bg-muted/40 text-muted-foreground flex flex-col items-center justify-center overflow-hidden rounded-md border text-center text-[11px] leading-tight">
-                  <img
-                    src={goal.alipayQrUrl}
-                    alt="Alipay QR"
-                    className="aspect-square w-full object-cover"
-                  />
-                  <span className="py-1">Alipay</span>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
   );
 }
 
@@ -1287,7 +1128,6 @@ export default function Popup() {
         >
           {t('starProject')}
         </a>
-        <SupportPopover label={t('supportMysteryButton')} />
       </div>
     </div>
   );

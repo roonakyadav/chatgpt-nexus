@@ -13,14 +13,6 @@ import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
 import { logger } from '@/core/services/LoggerService';
 import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { promptStorageService } from '@/core/services/StorageService';
-import {
-  DEFAULT_SUPPORT_GOAL,
-  SUPPORT_GOAL_REFRESH_MS,
-  type SupportGoalData,
-  formatSupportAmount,
-  getSupportGoalProgress,
-  loadSupportGoal,
-} from '@/core/services/SupportGoalService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
 import {
   buildConversationIdFromUrl,
@@ -302,238 +294,6 @@ function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-function createSupportPanel(i18n: ReturnType<typeof createI18n>): HTMLElement {
-  const wrap = createEl('div', 'gv-pm-support-wrap');
-  const button = createEl('button', 'gv-pm-support-btn');
-  button.type = 'button';
-  button.textContent = '?';
-  button.title = i18n.t('supportMysteryButton');
-  button.setAttribute('aria-label', i18n.t('supportMysteryButton'));
-  button.setAttribute('aria-haspopup', 'dialog');
-
-  const popover = createEl('div', 'gv-pm-support-popover gv-hidden');
-  popover.setAttribute('role', 'dialog');
-  popover.setAttribute('aria-label', i18n.t('supportMysteryButton'));
-  document.body.appendChild(popover);
-
-  let pinned = false;
-  let loaded = false;
-  let hoveringButton = false;
-  let hoveringPopover = false;
-  let closeTimer: number | null = null;
-  let refreshTimer: number | null = null;
-  let selectedPayment: 'wechat' | 'alipay' = 'wechat';
-  let supportLanguage: AppLanguage = 'en';
-  let currentGoal: SupportGoalData | null = null;
-
-  const getGoalCopy = (goal: SupportGoalData) => {
-    return {
-      title: goal.titleEn || goal.title,
-      description: goal.descriptionEn || goal.description,
-    };
-  };
-
-  const renderGoal = (goal: SupportGoalData) => {
-    currentGoal = goal;
-    popover.textContent = '';
-    if (!goal.enabled) {
-      popover.classList.add('gv-hidden');
-      return;
-    }
-
-    const copy = getGoalCopy(goal);
-    const title = createEl('div', 'gv-pm-support-title');
-    title.textContent = copy.title;
-    const description = createEl('p', 'gv-pm-support-copy');
-    description.textContent = copy.description;
-    const children = [title, description] as HTMLElement[];
-
-    if (goal.imageUrl) {
-      const image = createEl('img', 'gv-pm-support-image');
-      image.src = goal.imageUrl;
-      image.alt = copy.title;
-      children.push(image);
-    }
-
-    const progress = getSupportGoalProgress(goal);
-    const meta = createEl('div', 'gv-pm-support-meta');
-    const amount = createEl('span');
-    amount.textContent = `${formatSupportAmount(goal.current, goal.currency)} / ${formatSupportAmount(goal.target, goal.currency)}`;
-    const percent = createEl('span');
-    percent.textContent = `${progress}%`;
-    meta.append(amount, percent);
-
-    const bar = createEl('div', 'gv-pm-support-bar');
-    const fill = createEl('div', 'gv-pm-support-bar-fill');
-    fill.style.width = `${progress}%`;
-    bar.appendChild(fill);
-
-    const actions = createEl('div', 'gv-pm-support-actions');
-    const kofiLink = createEl('a', 'gv-pm-support-kofi');
-    kofiLink.href = goal.kofiUrl;
-    kofiLink.target = '_blank';
-    kofiLink.rel = 'noopener noreferrer';
-    kofiLink.textContent = 'Ko-fi';
-    actions.appendChild(kofiLink);
-
-    const paymentOptions = [
-      { key: 'wechat' as const, label: '\u5fae\u4fe1', url: goal.wechatQrUrl },
-      { key: 'alipay' as const, label: '\u652f\u4ed8\u5b9d', url: goal.alipayQrUrl },
-    ].filter((option) => option.url);
-    if (!paymentOptions.some((option) => option.key === selectedPayment)) {
-      selectedPayment = paymentOptions[0]?.key ?? 'wechat';
-    }
-
-    const layout = createEl('div', 'gv-pm-support-layout');
-    const main = createEl('div', 'gv-pm-support-main');
-    main.append(...children, meta, bar, actions);
-    layout.appendChild(main);
-
-    if (paymentOptions.length > 0) {
-      const side = createEl('div', 'gv-pm-support-side');
-      const payments = createEl('div', 'gv-pm-support-payments');
-      const tabs = createEl('div', 'gv-pm-support-payment-tabs');
-      const activePayment =
-        paymentOptions.find((option) => option.key === selectedPayment) ?? paymentOptions[0];
-
-      for (const option of paymentOptions) {
-        const tab = createEl('button', 'gv-pm-support-payment-tab');
-        tab.type = 'button';
-        tab.textContent = option.label;
-        tab.setAttribute('aria-pressed', String(option.key === activePayment.key));
-        tab.addEventListener('click', () => {
-          selectedPayment = option.key;
-          renderGoal(goal);
-          positionPopover();
-        });
-        tabs.appendChild(tab);
-      }
-
-      const code = createEl(
-        'div',
-        `gv-pm-support-payment gv-pm-support-payment-${activePayment.key}`,
-      );
-      const img = createEl('img');
-      img.src = activePayment.url;
-      img.alt = `${activePayment.label} QR`;
-      code.appendChild(img);
-      payments.append(tabs, code);
-      side.appendChild(payments);
-      layout.appendChild(side);
-    }
-
-    popover.appendChild(layout);
-  };
-
-  void i18n.get().then((lang) => {
-    supportLanguage = lang;
-    if (currentGoal) renderGoal(currentGoal);
-  });
-
-  wrap.addEventListener('gv-pm-language-change', (event) => {
-    const next = (event as CustomEvent<AppLanguage>).detail;
-    if (!isAppLanguage(next)) return;
-    supportLanguage = next;
-    if (currentGoal) renderGoal(currentGoal);
-  });
-
-  const positionPopover = () => {
-    const margin = 12;
-    const buttonRect = button.getBoundingClientRect();
-    const panelTheme =
-      document.getElementById(ID.panel)?.getAttribute('data-gv-theme') || detectPageTheme();
-    popover.setAttribute('data-gv-theme', panelTheme);
-    popover.style.maxHeight = `${Math.max(240, window.innerHeight - margin * 2)}px`;
-    popover.style.left = `${margin}px`;
-    popover.style.top = `${margin}px`;
-
-    const rect = popover.getBoundingClientRect();
-    const left = Math.min(
-      window.innerWidth - rect.width - margin,
-      Math.max(margin, buttonRect.right - rect.width),
-    );
-    const aboveTop = buttonRect.top - rect.height - 8;
-    const belowTop = buttonRect.bottom + 8;
-    const top =
-      aboveTop >= margin
-        ? aboveTop
-        : Math.min(window.innerHeight - rect.height - margin, Math.max(margin, belowTop));
-
-    popover.style.left = `${Math.round(left)}px`;
-    popover.style.top = `${Math.round(top)}px`;
-  };
-
-  const refreshGoal = (force = false) => {
-    void loadSupportGoal({ force }).then((goal) => {
-      renderGoal(goal);
-      if (!popover.classList.contains('gv-hidden')) positionPopover();
-    });
-  };
-  const startRefreshTimer = () => {
-    if (refreshTimer !== null) return;
-    refreshTimer = window.setInterval(() => refreshGoal(true), SUPPORT_GOAL_REFRESH_MS);
-  };
-  const stopRefreshTimer = () => {
-    if (refreshTimer === null) return;
-    window.clearInterval(refreshTimer);
-    refreshTimer = null;
-  };
-
-  const open = () => {
-    if (closeTimer !== null) {
-      window.clearTimeout(closeTimer);
-      closeTimer = null;
-    }
-    popover.classList.remove('gv-hidden');
-    if (!loaded) {
-      loaded = true;
-      renderGoal(DEFAULT_SUPPORT_GOAL);
-    }
-    positionPopover();
-    refreshGoal();
-    startRefreshTimer();
-  };
-  const close = (force = false) => {
-    if (closeTimer !== null) {
-      window.clearTimeout(closeTimer);
-      closeTimer = null;
-    }
-    if (!force && (pinned || hoveringButton || hoveringPopover)) return;
-    popover.classList.add('gv-hidden');
-    stopRefreshTimer();
-  };
-  const scheduleClose = () => {
-    if (closeTimer !== null) window.clearTimeout(closeTimer);
-    closeTimer = window.setTimeout(() => close(), 180);
-  };
-
-  button.addEventListener('mouseenter', () => {
-    hoveringButton = true;
-    open();
-  });
-  button.addEventListener('mouseleave', () => {
-    hoveringButton = false;
-    scheduleClose();
-  });
-  popover.addEventListener('mouseenter', () => {
-    hoveringPopover = true;
-    open();
-  });
-  popover.addEventListener('mouseleave', () => {
-    hoveringPopover = false;
-    scheduleClose();
-  });
-  button.addEventListener('click', () => {
-    pinned = !pinned;
-    if (pinned) open();
-    else if (!hoveringButton && !hoveringPopover) close(true);
-    button.setAttribute('aria-expanded', String(pinned));
-  });
-
-  wrap.append(button, popover);
-  return wrap;
 }
 
 function dedupeTags(tags: string[]): string[] {
@@ -1002,8 +762,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     favoritesBtn.appendChild(favoritesIcon);
     favoritesBtn.appendChild(favoritesLabel);
 
-    const supportPanel = createSupportPanel(i18n);
-
     secondaryActions.appendChild(backupBtn);
     secondaryActions.appendChild(importBtn);
     secondaryActions.appendChild(exportBtn);
@@ -1012,7 +770,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const supportActions = createEl('div', 'gv-pm-footer-support');
     supportActions.appendChild(projectLink);
     supportActions.appendChild(favoritesBtn);
-    supportActions.appendChild(supportPanel);
 
     footer.appendChild(secondaryActions);
     footer.appendChild(supportActions);
@@ -1767,19 +1524,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       favoritesBtn.title = i18n.t('favoritesSidebarTitle');
       favoritesBtn.setAttribute('aria-label', i18n.t('favoritesSidebarTitle'));
       favoritesSidebar.refreshLabels();
-      const supportButton = supportPanel.querySelector('.gv-pm-support-btn');
-      if (supportButton) {
-        supportButton.textContent = '?';
-        supportButton.setAttribute('title', i18n.t('supportMysteryButton'));
-        supportButton.setAttribute('aria-label', i18n.t('supportMysteryButton'));
-      }
-      supportPanel.dispatchEvent(
-        new CustomEvent<AppLanguage>('gv-pm-language-change', {
-          detail: normalizeLanguage(langSel.value),
-        }),
-      );
-      const supportPopover = supportPanel.querySelector('.gv-pm-support-popover');
-      if (supportPopover) supportPopover.setAttribute('aria-label', i18n.t('supportMysteryButton'));
       (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).placeholder =
         i18n.t('pm_name_placeholder');
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).placeholder =
@@ -1893,12 +1637,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // exclusion, clicking its scrollbar would be treated as an outside
       // click and close the whole panel.
       if (target.closest('.gv-pm-tooltip')) return;
-      // Favorites popover, support popover, and the cross-conversation jump
+      // Favorites popover and the cross-conversation jump
       // confirmation dialog are all appended to document.body, so without
       // these exclusions clicking inside any of them would close the prompt
       // panel — and with it the popover anchored to the panel's footer.
       if (target.closest('.gv-pm-favorites-popover')) return;
-      if (target.closest('.gv-pm-support-popover')) return;
       if (target.closest('.gv-jump-confirm-dialog__overlay')) return;
       closePanel();
     };
@@ -2451,7 +2194,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           trigger.remove();
           panel.remove();
           document.querySelectorAll('.gv-pm-confirm').forEach((el) => el.remove());
-          document.querySelectorAll('.gv-pm-support-popover').forEach((el) => el.remove());
           document.querySelectorAll('.gv-pm-favorites-popover').forEach((el) => el.remove());
         } catch (e) {
           console.error('[PromptManager] Destroy error:', e);
