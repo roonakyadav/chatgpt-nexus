@@ -56,9 +56,9 @@ function injectStyles(): void {
       align-items: center;
       gap: 4px;
       padding: 4px 8px;
-      background: transparent;
-      color: var(--gv-fork-btn-color, #5f6368);
-      border: none;
+      background: var(--gv-fork-btn-bg, transparent);
+      color: var(--gv-fork-btn-color, var(--text-secondary, #5f6368));
+      border: 1px solid var(--gv-fork-btn-border, transparent);
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
@@ -66,7 +66,7 @@ function injectStyles(): void {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
+      transition: opacity 0.15s, transform 0.15s, background-color 0.15s, border-color 0.15s;
       position: absolute;
       top: 9px;
       right: calc(100% + 8px);
@@ -111,9 +111,9 @@ function injectStyles(): void {
     /* Confirmation dialog */
     .${FORK_CONFIRM_CLASS} {
       z-index: 9999;
-      background: var(--gv-fork-confirm-bg, #fff);
-      color: var(--gv-fork-confirm-color, #202124);
-      border: 1px solid var(--gv-fork-confirm-border, rgba(0, 0, 0, 0.12));
+      background: var(--gv-fork-confirm-bg, var(--main-surface-primary, #fff));
+      color: var(--gv-fork-confirm-color, var(--text-primary, #202124));
+      border: 1px solid var(--gv-fork-confirm-border, var(--outline-variant, rgba(0, 0, 0, 0.12)));
       border-radius: 8px;
       padding: 12px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
@@ -140,12 +140,12 @@ function injectStyles(): void {
       color: inherit;
     }
     .${FORK_CONFIRM_CLASS} button.gv-fork-primary {
-      background: var(--gv-fork-primary-bg, #1a73e8);
-      color: #fff;
+      background: var(--gv-fork-primary-bg, var(--gpt-primary, #1a73e8));
+      color: var(--gv-fork-primary-color, var(--gpt-on-primary, #fff));
       border-color: transparent;
     }
     .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover {
-      background: var(--gv-fork-primary-hover-bg, #1765cc);
+      background: var(--gv-fork-primary-hover-bg, rgba(26, 115, 232, 0.92));
     }
 
     /* Fork branch indicator group */
@@ -226,26 +226,32 @@ function injectStyles(): void {
     }
 
     /* Dark mode */
+    html.dark .${FORK_BTN_CLASS},
     html[dark] .${FORK_BTN_CLASS},
     body.dark-theme .${FORK_BTN_CLASS} {
       --gv-fork-btn-color: #9aa0a6;
       --gv-fork-btn-hover-bg: rgba(255, 255, 255, 0.08);
+      --gv-fork-btn-border: var(--outline-variant, rgba(255, 255, 255, 0.08));
     }
+    html.dark .${FORK_CONFIRM_CLASS},
     html[dark] .${FORK_CONFIRM_CLASS},
     body.dark-theme .${FORK_CONFIRM_CLASS} {
-      --gv-fork-confirm-bg: #292a2d;
-      --gv-fork-confirm-color: #e8eaed;
+      --gv-fork-confirm-bg: var(--main-surface-primary, #292a2d);
+      --gv-fork-confirm-color: var(--text-primary, #e8eaed);
       --gv-fork-confirm-border: rgba(255, 255, 255, 0.12);
     }
+    html.dark .${FORK_CONFIRM_CLASS} button.gv-fork-primary,
     html[dark] .${FORK_CONFIRM_CLASS} button.gv-fork-primary,
     body.dark-theme .${FORK_CONFIRM_CLASS} button.gv-fork-primary {
-      --gv-fork-primary-bg: #8ab4f8;
-      color: #202124;
+      --gv-fork-primary-bg: var(--gpt-primary, #8ab4f8);
+      color: var(--gpt-on-primary, #202124);
     }
+    html.dark .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover,
     html[dark] .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover,
     body.dark-theme .${FORK_CONFIRM_CLASS} button.gv-fork-primary:hover {
-      --gv-fork-primary-hover-bg: #aecbfa;
+      --gv-fork-primary-hover-bg: rgba(138, 180, 248, 0.92);
     }
+    html.dark .${FORK_INDICATOR_CLASS},
     html[dark] .${FORK_INDICATOR_CLASS},
     body.dark-theme .${FORK_INDICATOR_CLASS} {
       --gv-fork-indicator-bg: rgba(138, 180, 248, 0.12);
@@ -255,6 +261,7 @@ function injectStyles(): void {
       --gv-fork-indicator-current-bg: #8ab4f8;
       --gv-fork-indicator-current-color: #202124;
     }
+    html.dark .${FORK_INDICATOR_DELETE_CLASS},
     html[dark] .${FORK_INDICATOR_DELETE_CLASS},
     body.dark-theme .${FORK_INDICATOR_DELETE_CLASS} {
       background: #f28b82;

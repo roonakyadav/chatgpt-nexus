@@ -936,7 +936,7 @@ export class PDFPrintService {
 
         /* Links */
         a {
-          color: #2563eb;
+          color: #0f766e;
           text-decoration: none;
         }
 

@@ -124,16 +124,16 @@ export const ATTACHMENT_LABEL: Record<AttachmentType, string> = {
  */
 export const ATTACHMENT_COLOR: Record<AttachmentType, string> = {
   pdf: '#dc2626', // red
-  doc: '#2563eb', // blue (Word-ish)
+  doc: '#0f766e', // teal
   sheet: '#16a34a', // green (Excel-ish)
   slide: '#ea580c', // orange (Powerpoint-ish)
   text: '#6b7280', // gray
   csv: '#15803d', // darker green
-  image: '#2563eb', // blue
+  image: '#0f766e', // teal
   code: '#0d9488', // teal
   archive: '#a16207', // amber
   audio: '#db2777', // pink
-  video: '#2563eb', // blue
+  video: '#0f766e', // teal
   other: '#6b7280', // gray
 };
 

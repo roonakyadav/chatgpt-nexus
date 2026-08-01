@@ -76,7 +76,7 @@ const STYLE = `
     --border: #e5e5e5;
     --user-bg: #f3f3f5;
     --assistant-bg: #fafafa;
-    --accent: #2563eb;
+    --accent: #0f766e;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -86,7 +86,7 @@ const STYLE = `
       --border: #333;
       --user-bg: #262626;
       --assistant-bg: #1f1f1f;
-      --accent: #60a5fa;
+      --accent: #2dd4bf;
     }
   }
   * { box-sizing: border-box; }

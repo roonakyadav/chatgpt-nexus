@@ -51,24 +51,24 @@ function injectStyles() {
       align-items: center;
       gap: 6px;
       padding: 6px 10px;
-      background-color: #1e1e1e;
-      color: #fff;
+      background-color: var(--main-surface-primary, #1e1e1e);
+      color: var(--text-primary, #fff);
       border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       cursor: pointer;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 13px;
       font-weight: 500;
       transition: all 0.2s ease;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--outline-variant, rgba(255, 255, 255, 0.1));
       transform: translateY(0);
       opacity: 1;
       pointer-events: auto;
     }
     .gv-quote-btn:hover {
-      background-color: #2d2d2d;
+      background-color: var(--main-surface-secondary, #2d2d2d);
       transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
     .gv-quote-btn svg {
       width: 14px;
@@ -84,22 +84,38 @@ function injectStyles() {
     /* Light mode support */
     @media (prefers-color-scheme: light) {
       .gv-quote-btn {
-        background-color: #fff;
-        color: #1f1f1f;
-        border: 1px solid rgba(0,0,0,0.08);
+        background-color: var(--main-surface-primary, #fff);
+        color: var(--text-primary, #1f1f1f);
+        border: 1px solid var(--outline-variant, rgba(0, 0, 0, 0.08));
       }
       .gv-quote-btn:hover {
-        background-color: #f5f5f5;
+        background-color: var(--main-surface-secondary, #f5f5f5);
       }
     }
     /* Check for specific theme attributes if ChatGPT uses them */
-    body[data-theme="light"] .gv-quote-btn {
-      background-color: #fff;
-      color: #1f1f1f;
-      border: 1px solid rgba(0,0,0,0.08);
+    html.dark .gv-quote-btn,
+    body.dark-theme .gv-quote-btn,
+    body[data-theme="dark"] .gv-quote-btn {
+      background-color: var(--main-surface-primary, #1e1e1e);
+      color: var(--text-primary, #fff);
+      border-color: var(--outline-variant, rgba(255, 255, 255, 0.1));
     }
+    html.dark .gv-quote-btn:hover,
+    body.dark-theme .gv-quote-btn:hover,
+    body[data-theme="dark"] .gv-quote-btn:hover {
+      background-color: var(--main-surface-secondary, #2d2d2d);
+    }
+    html.light .gv-quote-btn,
+    body.light-theme .gv-quote-btn,
+    body[data-theme="light"] .gv-quote-btn {
+      background-color: var(--main-surface-primary, #fff);
+      color: var(--text-primary, #1f1f1f);
+      border-color: var(--outline-variant, rgba(0, 0, 0, 0.08));
+    }
+    html.light .gv-quote-btn:hover,
+    body.light-theme .gv-quote-btn:hover,
     body[data-theme="light"] .gv-quote-btn:hover {
-       background-color: #f5f5f5;
+      background-color: var(--main-surface-secondary, #f5f5f5);
     }
   `;
   document.head.appendChild(style);

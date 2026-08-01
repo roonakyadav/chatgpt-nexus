@@ -76,11 +76,10 @@ function injectStyles() {
       /* Hide overflow */
       overflow: hidden !important;
       
-      /* Visual styling - Clean, no borders if possible to avoid "shadow edge" issues */
+      /* Visual styling - Use ChatGPT surface tokens when available */
       background-color: var(--composer-surface-primary, var(--main-surface-secondary, #f0f4f9)) !important;
-      /* Subtle shadow */
+      border: 1px solid var(--outline-variant, rgba(0, 0, 0, 0.08)) !important;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-      border: none !important;
       
       /* Center content */
       display: flex !important;
@@ -144,20 +143,24 @@ function injectStyles() {
     @media (prefers-color-scheme: dark) {
       .${COLLAPSED_CLASS} {
         background-color: var(--composer-surface-primary, #2b2b2b) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important; 
+        border-color: var(--outline-variant, rgba(255, 255, 255, 0.12)) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
       }
       .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS} {
         color: var(--text-primary, #e8eaed);
       }
     }
     
-    body[data-theme="dark"] .${COLLAPSED_CLASS},
-    body.dark-theme .${COLLAPSED_CLASS} {
-        background-color: #2b2b2b !important;
+    html.dark .${COLLAPSED_CLASS},
+    body.dark-theme .${COLLAPSED_CLASS},
+    body[data-theme="dark"] .${COLLAPSED_CLASS} {
+      background-color: var(--composer-surface-primary, #2b2b2b) !important;
+      border-color: var(--outline-variant, rgba(255, 255, 255, 0.12)) !important;
     }
-    body[data-theme="dark"] .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS},
-    body.dark-theme .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS} {
-        color: #e8eaed;
+    html.dark .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS},
+    body.dark-theme .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS},
+    body[data-theme="dark"] .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS} {
+      color: var(--text-primary, #e8eaed);
     }
   `;
   document.head.appendChild(style);

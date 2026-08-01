@@ -35,7 +35,7 @@ export interface FolderColorConfig {
  * - Yellow: Needs Attention
  * - Green: Completed/Safe
  * - Blue: Information/Reference
- * - Purple: Creative/Ideas
+ * - Teal: Creative/Ideas
  * - Pink: Personal/Special
  * - Gray: Default/Archived
  */
@@ -85,8 +85,8 @@ export const FOLDER_COLORS: FolderColorConfig[] = [
   {
     id: 'purple',
     nameKey: 'folder_color_purple',
-    lightColor: '#a855f7', // purple-500
-    darkColor: '#c084fc', // purple-400
+    lightColor: '#14b8a6', // teal-500
+    darkColor: '#2dd4bf', // teal-400
     priority: 'low',
   },
 ];
