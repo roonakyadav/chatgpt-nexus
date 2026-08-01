@@ -1735,6 +1735,19 @@ body.light-theme .gv-pm-title {
   box-shadow: 0 4px 12px oklch(0 0 0 / 0.08);
 }
 
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-project-link {
+  border-color: oklch(0.82 0.04 205);
+  background: oklch(0.97 0.018 205);
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-project-link:hover {
+  background: oklch(0.94 0.028 205);
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-project-link:active {
+  background: oklch(0.91 0.04 205);
+}
+
 .gv-pm-version-outdated {
   border-color: rgba(109, 40, 217, 0.6);
 }
