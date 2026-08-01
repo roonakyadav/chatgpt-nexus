@@ -188,12 +188,6 @@
   "pm_delete_confirm": {
     "message": "Delete this prompt?"
   },
-  "pm_lock": {
-    "message": "Lock"
-  },
-  "pm_unlock": {
-    "message": "Unlock"
-  },
   "pm_import_invalid": {
     "message": "Invalid import file"
   },

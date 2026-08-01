@@ -2,7 +2,6 @@
  * - Injects a floating trigger button using the extension icon
  * - Opens a small anchored panel above the trigger (default)
  * - Panel supports: i18n language switch, add prompt, tag chips, search, copy, import/export
- * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
 import DOMPurify from 'dompurify';
 import 'katex/dist/katex.min.css';
@@ -132,7 +131,6 @@ type TriggerPosition = { bottom: number; right: number };
 
 const STORAGE_KEYS = {
   items: StorageKeys.PROMPT_ITEMS,
-  locked: StorageKeys.PROMPT_PANEL_LOCKED,
   position: StorageKeys.PROMPT_PANEL_POSITION,
   triggerPos: StorageKeys.PROMPT_TRIGGER_POSITION,
   language: StorageKeys.LANGUAGE, // reuse global language key
@@ -414,7 +412,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     try {
       const keysToMigrate = [
         STORAGE_KEYS.items,
-        STORAGE_KEYS.locked,
         STORAGE_KEYS.position,
         STORAGE_KEYS.triggerPos,
       ];
@@ -594,11 +591,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         langSel.value = 'en';
       });
 
-    const lockBtn = createEl('button', 'gv-pm-lock');
-    lockBtn.setAttribute('aria-pressed', 'false');
-    lockBtn.setAttribute('data-icon', '🔓');
-    lockBtn.title = i18n.t('pm_lock');
-
     const addBtn = createEl('button', 'gv-pm-add');
     addBtn.textContent = i18n.t('pm_add');
 
@@ -608,7 +600,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     controls.appendChild(langSel);
     controls.appendChild(addBtn);
-    controls.appendChild(lockBtn);
     header.appendChild(dragHandle);
     header.appendChild(titleRow);
     header.appendChild(controls);
@@ -821,7 +812,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let items: PromptItem[] = await readStorage<PromptItem[]>(STORAGE_KEYS.items, []);
     let open = false;
     let selectedTags: Set<string> = new Set<string>();
-    let locked = !!(await readStorage<boolean>(STORAGE_KEYS.locked, false));
     let savedPos = await readStorage<PanelPosition | null>(STORAGE_KEYS.position, null);
     let dragging = false;
     let dragOffset = { x: 0, y: 0 };
@@ -1376,26 +1366,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // Refresh the favorites listing every time the panel comes back up
       // so stars added while it was closed show immediately.
       void favoritesSidebar.refresh();
-      if (locked && savedPos) {
-        // Clamp the saved position to the current viewport. Without this, a
-        // panel pinned on a wider screen renders past the edge after the user
-        // narrows the window ── and since dragging/the unlock button are gated
-        // on `!locked`, the user gets stuck. See #635.
-        const pad = 8;
-        const rect = panel.getBoundingClientRect();
-        const panelW = rect.width || 320;
-        const panelH = rect.height || 360;
-        const left = Math.max(pad, Math.min(savedPos.left, window.innerWidth - panelW - pad));
-        const top = Math.max(pad, Math.min(savedPos.top, window.innerHeight - panelH - pad));
-        panel.style.left = `${Math.round(left)}px`;
-        panel.style.top = `${Math.round(top)}px`;
-      } else {
-        // measure after making visible
-        const anchor = getNexusButtonElement() || document.body;
-        const pos = computeAnchoredPosition(anchor, panel);
-        panel.style.left = `${pos.left}px`;
-        panel.style.top = `${pos.top}px`;
-      }
+      // measure after making visible
+      const anchor = getNexusButtonElement() || document.body;
+      const pos = computeAnchoredPosition(anchor, panel);
+      panel.style.left = `${pos.left}px`;
+      panel.style.top = `${pos.top}px`;
       requestAnimationFrame(syncTagScrollHint);
     }
 
@@ -1424,14 +1399,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     };
     const unsubscribeStarAdded = eventBus.on('starred:added', onStarChanged);
     const unsubscribeStarRemoved = eventBus.on('starred:removed', onStarChanged);
-
-    function applyLockUI(): void {
-      lockBtn.classList.toggle('active', locked);
-      lockBtn.setAttribute('aria-pressed', locked ? 'true' : 'false');
-      lockBtn.setAttribute('data-icon', locked ? '🔒' : '🔓');
-      lockBtn.title = locked ? i18n.t('pm_unlock') || 'Unlock' : i18n.t('pm_lock') || 'Lock';
-      panel.classList.toggle('gv-locked', locked);
-    }
 
     function refreshUITexts(): void {
       // Keep custom icon + label
@@ -1466,7 +1433,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       (addForm.querySelector('.gv-pm-save') as HTMLButtonElement).textContent = i18n.t('pm_save');
       (addForm.querySelector('.gv-pm-cancel') as HTMLButtonElement).textContent =
         i18n.t('pm_cancel');
-      applyLockUI();
       applyViewModeUI();
       renderTags();
       renderList();
@@ -1474,19 +1440,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     function onReposition(): void {
       if (!open) return;
-      if (locked) {
-        // Don't re-anchor when locked, but do keep the panel inside the viewport
-        // so a window resize can't strand the unlock button off-screen (#635).
-        const pad = 8;
-        const rect = panel.getBoundingClientRect();
-        const left = Math.max(pad, Math.min(rect.left, window.innerWidth - rect.width - pad));
-        const top = Math.max(pad, Math.min(rect.top, window.innerHeight - rect.height - pad));
-        if (left !== rect.left || top !== rect.top) {
-          panel.style.left = `${Math.round(left)}px`;
-          panel.style.top = `${Math.round(top)}px`;
-        }
-        return;
-      }
       const anchor = getNexusButtonElement() || document.body;
       const pos = computeAnchoredPosition(anchor, panel);
       panel.style.left = `${pos.left}px`;
@@ -1494,7 +1447,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     }
 
     function beginDrag(ev: PointerEvent): void {
-      if (locked) return;
       dragging = true;
       const rect = panel.getBoundingClientRect();
       dragOffset = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
@@ -1560,23 +1512,6 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     };
     window.addEventListener('keydown', onWindowKeyDown, { passive: true });
 
-    lockBtn.addEventListener('click', async (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      locked = !locked;
-      await writeStorage(STORAGE_KEYS.locked, locked);
-      applyLockUI();
-      try {
-        (ev.currentTarget as HTMLButtonElement)?.blur?.();
-      } catch {}
-      if (locked) {
-        const rect = panel.getBoundingClientRect();
-        savedPos = { left: rect.left, top: rect.top };
-        await writeStorage(STORAGE_KEYS.position, savedPos);
-      } else {
-        onReposition();
-      }
-    });
     panel.addEventListener('pointerdown', (ev: PointerEvent) => {
       const target = ev.target as HTMLElement;
       if (target.closest('.gv-pm-drag')) beginDrag(ev);
