@@ -213,7 +213,7 @@ Native support for:
 Clone the repository
 
 ```bash
-git clone https://github.com/USERNAME/chatgpt-nexus.git
+git clone https://github.com/roonakyadav/chatgpt-nexus.git
 
 cd chatgpt-nexus
 ```
