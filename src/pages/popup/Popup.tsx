@@ -1078,7 +1078,7 @@ export default function Popup() {
         <Section title={t('appearanceOptions')}>
           <div className="space-y-2">
             <Label className="text-sm font-medium">{t('themes')}</Label>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               {THEMES.map((themeValue) => {
                 const themeConfig: Record<
                   Theme,
@@ -1116,10 +1116,17 @@ export default function Popup() {
                   },
                 };
                 const config = themeConfig[themeValue];
+                const isSelected = theme === themeValue;
                 return (
                   <label
                     key={themeValue}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/50"
+                    className={`
+                      relative cursor-pointer rounded-lg border-2 p-3 transition-all duration-200
+                      ${isSelected 
+                        ? 'border-primary/50 shadow-[0_0_12px_rgba(var(--primary),0.3)]' 
+                        : 'border-border/60 hover:border-border hover:shadow-md'
+                      }
+                    `}
                     htmlFor={`theme-${themeValue}`}
                   >
                     <input
@@ -1127,27 +1134,32 @@ export default function Popup() {
                       type="radio"
                       name="theme"
                       value={themeValue}
-                      checked={theme === themeValue}
+                      checked={isSelected}
                       onChange={() => {
                         setTheme(themeValue);
                         void setSyncStorage({ [StorageKeys.THEME]: themeValue });
                       }}
-                      className="mt-1"
+                      className="sr-only"
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                    {isSelected && (
+                      <span className="absolute right-2 top-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                        {t('active')}
+                      </span>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">{config.name}</span>
-                        <div className="flex gap-1">
+                        <div className="flex gap-0.5">
                           {config.colors.map((color, i) => (
                             <div
                               key={i}
-                              className="h-3 w-3 rounded-full border"
+                              className="h-2.5 w-2.5 rounded-full border border-border/50"
                               style={{ backgroundColor: color }}
                             />
                           ))}
                         </div>
                       </div>
-                      <p className="text-muted-foreground mt-1 text-xs">{config.hint}</p>
+                      <p className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">{config.hint}</p>
                     </div>
                   </label>
                 );
@@ -1157,33 +1169,121 @@ export default function Popup() {
         </Section>
 
         <Section title={t('singleConvExportOptions')}>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label className="text-sm font-medium">{t('singleConvExportFormat')}</Label>
-            <p className="text-muted-foreground text-xs">{t('singleConvExportFormatHint')}</p>
-            {singleConvExportOptions.map(([value, label, description]) => (
-              <label
-                key={value}
-                className="flex cursor-pointer items-start gap-2 text-sm"
-                htmlFor={`single-conv-export-${value}`}
-              >
-                <input
-                  id={`single-conv-export-${value}`}
-                  type="radio"
-                  name="singleConvExportFormat"
-                  value={value}
-                  checked={singleConvExportFormat === value}
-                  onChange={() => {
-                    setSingleConvExportFormat(value);
-                    void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
-                  }}
-                  className="mt-1"
-                />
-                <span className="flex flex-col">
-                  <span>{label}</span>
-                  <span className="text-muted-foreground text-xs">{description}</span>
-                </span>
-              </label>
-            ))}
+            
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatMarkdown')}</h4>
+                <div className="space-y-1 pl-2">
+                  {singleConvExportOptions
+                    .filter(([value]) => value === 'markdown' || value === 'markdown-simple')
+                    .map(([value, label, _description]) => (
+                      <label
+                        key={value}
+                        className={`
+                          flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
+                          ${singleConvExportFormat === value 
+                            ? 'border-primary/50 bg-primary/5' 
+                            : 'border-border/60 hover:border-border hover:bg-accent/50'
+                          }
+                        `}
+                        htmlFor={`single-conv-export-${value}`}
+                      >
+                        <input
+                          id={`single-conv-export-${value}`}
+                          type="radio"
+                          name="singleConvExportFormat"
+                          value={value}
+                          checked={singleConvExportFormat === value}
+                          onChange={() => {
+                            setSingleConvExportFormat(value);
+                            void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatJson')}</h4>
+                <div className="space-y-1 pl-2">
+                  {singleConvExportOptions
+                    .filter(([value]) => value === 'json' || value === 'json-simple')
+                    .map(([value, label, _description]) => (
+                      <label
+                        key={value}
+                        className={`
+                          flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
+                          ${singleConvExportFormat === value 
+                            ? 'border-primary/50 bg-primary/5' 
+                            : 'border-border/60 hover:border-border hover:bg-accent/50'
+                          }
+                        `}
+                        htmlFor={`single-conv-export-${value}`}
+                      >
+                        <input
+                          id={`single-conv-export-${value}`}
+                          type="radio"
+                          name="singleConvExportFormat"
+                          value={value}
+                          checked={singleConvExportFormat === value}
+                          onChange={() => {
+                            setSingleConvExportFormat(value);
+                            void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatHtml')}</h4>
+                <div className="space-y-1 pl-2">
+                  {singleConvExportOptions
+                    .filter(([value]) => value === 'html')
+                    .map(([value, label, _description]) => (
+                      <label
+                        key={value}
+                        className={`
+                          flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
+                          ${singleConvExportFormat === value 
+                            ? 'border-primary/50 bg-primary/5' 
+                            : 'border-border/60 hover:border-border hover:bg-accent/50'
+                          }
+                        `}
+                        htmlFor={`single-conv-export-${value}`}
+                      >
+                        <input
+                          id={`single-conv-export-${value}`}
+                          type="radio"
+                          name="singleConvExportFormat"
+                          value={value}
+                          checked={singleConvExportFormat === value}
+                          onChange={() => {
+                            setSingleConvExportFormat(value);
+                            void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-border/40 border-t pt-2">
+              <p className="text-muted-foreground text-xs">
+                {singleConvExportOptions.find(([value]) => value === singleConvExportFormat)?.[2]}
+              </p>
+            </div>
           </div>
         </Section>
 

@@ -27,10 +27,19 @@
     "message": "Export this conversation using the format chosen in the extension popup"
   },
   "singleConvExportOptions": {
-    "message": "Conversation export"
+    "message": "Conversation Export"
   },
   "singleConvExportFormat": {
-    "message": "Export format"
+    "message": "Export Format"
+  },
+  "formatMarkdown": {
+    "message": "Markdown"
+  },
+  "formatJson": {
+    "message": "JSON"
+  },
+  "formatHtml": {
+    "message": "HTML"
   },
   "singleConvExportFormatHint": {
     "message": "Picks the format used by the download button next to ChatGPT's Share. Simplified variants strip Code Interpreter blocks, tool output, and the model's pre-tool narration — keeping only your messages, the final reply, and timestamps."
@@ -1525,6 +1534,9 @@
   },
   "themes": {
     "message": "Themes"
+  },
+  "active": {
+    "message": "Active"
   },
   "themeDefault": {
     "message": "Default Dark"
