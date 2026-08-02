@@ -144,6 +144,21 @@ function CollapsibleSection({
   );
 }
 
+function Subsection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{title}</h3>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
 export default function Popup() {
   const { t } = useLanguage();
   const [showStarredHistory, setShowStarredHistory] = useState(false);
@@ -773,185 +788,187 @@ export default function Popup() {
         </Section>
 
         <Section title={t('layoutOptions')}>
-          <WidthSlider
-            label={t('chatWidth')}
-            value={chatWidth}
-            min={CHAT_PERCENT.min}
-            max={CHAT_PERCENT.max}
-            step={1}
-            narrowLabel={t('chatWidthNarrow')}
-            wideLabel={t('chatWidthWide')}
-            onChange={setChatWidth}
-            onChangeComplete={(value) => void setSyncStorage({ [StorageKeys.CHAT_WIDTH]: value })}
-            enabled={chatWidthEnabled}
-            onToggle={(value) =>
-              updateToggle(setChatWidthEnabled, StorageKeys.CHAT_WIDTH_ENABLED, value)
-            }
-          />
-          <WidthSlider
-            label={t('chatFontSize')}
-            value={chatFontSize}
-            min={CHAT_FONT_SIZE.min}
-            max={CHAT_FONT_SIZE.max}
-            step={1}
-            narrowLabel={t('chatFontSizeSmall')}
-            wideLabel={t('chatFontSizeLarge')}
-            onChange={setChatFontSize}
-            onChangeComplete={(value) =>
-              void setSyncStorage({ [StorageKeys.CHAT_FONT_SIZE]: value })
-            }
-            enabled={chatFontSizeEnabled}
-            onToggle={(value) =>
-              updateToggle(setChatFontSizeEnabled, StorageKeys.CHAT_FONT_SIZE_ENABLED, value)
-            }
-          />
-          <WidthSlider
-            label={t('codeFontSize')}
-            value={codeFontSize}
-            min={CODE_FONT_SIZE.min}
-            max={CODE_FONT_SIZE.max}
-            step={1}
-            narrowLabel={t('chatFontSizeSmall')}
-            wideLabel={t('chatFontSizeLarge')}
-            onChange={setCodeFontSize}
-            onChangeComplete={(value) =>
-              void setSyncStorage({ [StorageKeys.CODE_FONT_SIZE]: value })
-            }
-            enabled={codeFontSizeEnabled}
-            onToggle={(value) =>
-              updateToggle(setCodeFontSizeEnabled, StorageKeys.CODE_FONT_SIZE_ENABLED, value)
-            }
-          />
-          {/* Chat font family — preset picker + optional file upload.
-              Custom-imported fonts are stored in chrome.storage.local so the
-              ~5 MB quota is honoured; the preset choice itself goes to
-              chrome.storage.sync. See chatFontFamily/index.ts. */}
-          <div className="flex flex-col gap-2 border-t pt-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="gv-font-family-select" className="text-sm font-medium">
-                {t('chatFontFamily')}
-              </Label>
-              <Switch
-                id="gv-font-family-enabled"
-                checked={fontFamilyEnabled}
-                onChange={(event) =>
-                  updateToggle(
-                    setFontFamilyEnabled,
-                    StorageKeys.CHAT_FONT_FAMILY_ENABLED,
-                    event.target.checked,
-                  )
-                }
-              />
-            </div>
-            <Select
-              id="gv-font-family-select"
-              value={fontFamily}
-              disabled={!fontFamilyEnabled}
-              onChange={(e) => {
-                const v = e.target.value as FontPreset;
-                setFontFamily(v);
-                void setSyncStorage({ [StorageKeys.CHAT_FONT_FAMILY]: v });
-              }}
-            >
-              <option value="default">{t('chatFontFamilyDefault')}</option>
-              <option value="claude">{t('chatFontFamilyClaude')}</option>
-              <option value="gemini">{t('chatFontFamilyGemini')}</option>
-              <option value="custom" disabled={!customFontName}>
-                {t('chatFontFamilyCustom')}
-                {customFontName
-                  ? ` — ${customFontName}`
-                  : ` (${t('chatFontFamilyNoneImported')})`}
-              </option>
-            </Select>
-            <p className="text-muted-foreground text-xs leading-snug">
-              {t('chatFontFamilyHint')}
-            </p>
-            <div className="flex items-center gap-2">
-              <input
-                ref={customFontInputRef}
-                type="file"
-                accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void handleCustomFontPicked(file);
-                  // Reset so re-picking the same file fires onChange again
-                  // (file inputs swallow same-file picks otherwise).
-                  e.target.value = '';
-                }}
-              />
-              <Button
-                size="sm"
-                variant="outline"
+          <Subsection title={t('general')}>
+            <WidthSlider
+              label={t('chatWidth')}
+              value={chatWidth}
+              min={CHAT_PERCENT.min}
+              max={CHAT_PERCENT.max}
+              step={1}
+              narrowLabel={t('chatWidthNarrow')}
+              wideLabel={t('chatWidthWide')}
+              onChange={setChatWidth}
+              onChangeComplete={(value) => void setSyncStorage({ [StorageKeys.CHAT_WIDTH]: value })}
+              enabled={chatWidthEnabled}
+              onToggle={(value) =>
+                updateToggle(setChatWidthEnabled, StorageKeys.CHAT_WIDTH_ENABLED, value)
+              }
+            />
+            <WidthSlider
+              label={t('editInputWidth')}
+              value={editInputWidth}
+              min={EDIT_PERCENT.min}
+              max={EDIT_PERCENT.max}
+              step={1}
+              narrowLabel={t('chatWidthNarrow')}
+              wideLabel={t('chatWidthWide')}
+              onChange={setEditInputWidth}
+              onChangeComplete={(value) =>
+                void setSyncStorage({ [StorageKeys.EDIT_INPUT_WIDTH]: value })
+              }
+              enabled={editInputWidthEnabled}
+              onToggle={(value) =>
+                updateToggle(setEditInputWidthEnabled, StorageKeys.EDIT_INPUT_WIDTH_ENABLED, value)
+              }
+            />
+            <WidthSlider
+              label={t('sidebarWidth')}
+              value={sidebarWidth}
+              min={SIDEBAR_PX.min}
+              max={SIDEBAR_PX.max}
+              step={1}
+              valueFormatter={(value) => `${value}px`}
+              narrowLabel={t('sidebarWidthNarrow')}
+              wideLabel={t('sidebarWidthWide')}
+              onChange={setSidebarWidth}
+              onChangeComplete={(value) =>
+                void setSyncStorage({ [StorageKeys.SIDEBAR_WIDTH]: value })
+              }
+            />
+          </Subsection>
+          <Subsection title={t('text')}>
+            <WidthSlider
+              label={t('chatFontSize')}
+              value={chatFontSize}
+              min={CHAT_FONT_SIZE.min}
+              max={CHAT_FONT_SIZE.max}
+              step={1}
+              narrowLabel={t('chatFontSizeSmall')}
+              wideLabel={t('chatFontSizeLarge')}
+              onChange={setChatFontSize}
+              onChangeComplete={(value) =>
+                void setSyncStorage({ [StorageKeys.CHAT_FONT_SIZE]: value })
+              }
+              enabled={chatFontSizeEnabled}
+              onToggle={(value) =>
+                updateToggle(setChatFontSizeEnabled, StorageKeys.CHAT_FONT_SIZE_ENABLED, value)
+              }
+            />
+            <WidthSlider
+              label={t('codeFontSize')}
+              value={codeFontSize}
+              min={CODE_FONT_SIZE.min}
+              max={CODE_FONT_SIZE.max}
+              step={1}
+              narrowLabel={t('chatFontSizeSmall')}
+              wideLabel={t('chatFontSizeLarge')}
+              onChange={setCodeFontSize}
+              onChangeComplete={(value) =>
+                void setSyncStorage({ [StorageKeys.CODE_FONT_SIZE]: value })
+              }
+              enabled={codeFontSizeEnabled}
+              onToggle={(value) =>
+                updateToggle(setCodeFontSizeEnabled, StorageKeys.CODE_FONT_SIZE_ENABLED, value)
+              }
+            />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="gv-font-family-select" className="text-sm font-medium">
+                  {t('chatFontFamily')}
+                </Label>
+                <Switch
+                  id="gv-font-family-enabled"
+                  checked={fontFamilyEnabled}
+                  onChange={(event) =>
+                    updateToggle(
+                      setFontFamilyEnabled,
+                      StorageKeys.CHAT_FONT_FAMILY_ENABLED,
+                      event.target.checked,
+                    )
+                  }
+                />
+              </div>
+              <Select
+                id="gv-font-family-select"
+                value={fontFamily}
                 disabled={!fontFamilyEnabled}
-                onClick={() => customFontInputRef.current?.click()}
+                onChange={(e) => {
+                  const v = e.target.value as FontPreset;
+                  setFontFamily(v);
+                  void setSyncStorage({ [StorageKeys.CHAT_FONT_FAMILY]: v });
+                }}
               >
-                {t('chatFontFamilyImport')}
-              </Button>
-              {customFontName ? (
+                <option value="default">{t('chatFontFamilyDefault')}</option>
+                <option value="claude">{t('chatFontFamilyClaude')}</option>
+                <option value="gemini">{t('chatFontFamilyGemini')}</option>
+                <option value="custom" disabled={!customFontName}>
+                  {t('chatFontFamilyCustom')}
+                  {customFontName
+                    ? ` — ${customFontName}`
+                    : ` (${t('chatFontFamilyNoneImported')})`}
+                </option>
+              </Select>
+              <p className="text-muted-foreground text-xs leading-snug">
+                {t('chatFontFamilyHint')}
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={customFontInputRef}
+                  type="file"
+                  accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleCustomFontPicked(file);
+                    // Reset so re-picking the same file fires onChange again
+                    // (file inputs swallow same-file picks otherwise).
+                    e.target.value = '';
+                  }}
+                />
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
                   disabled={!fontFamilyEnabled}
-                  onClick={() => void handleCustomFontClear()}
+                  onClick={() => customFontInputRef.current?.click()}
                 >
-                  {t('chatFontFamilyClear')}
+                  {t('chatFontFamilyImport')}
                 </Button>
+                {customFontName ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={!fontFamilyEnabled}
+                    onClick={() => void handleCustomFontClear()}
+                  >
+                    {t('chatFontFamilyClear')}
+                  </Button>
+                ) : null}
+              </div>
+              {customFontStatus ? (
+                <p className="text-muted-foreground text-xs leading-snug">{customFontStatus}</p>
               ) : null}
             </div>
-            {customFontStatus ? (
-              <p className="text-muted-foreground text-xs leading-snug">{customFontStatus}</p>
-            ) : null}
-          </div>
-          <WidthSlider
-            label={t('editInputWidth')}
-            value={editInputWidth}
-            min={EDIT_PERCENT.min}
-            max={EDIT_PERCENT.max}
-            step={1}
-            narrowLabel={t('chatWidthNarrow')}
-            wideLabel={t('chatWidthWide')}
-            onChange={setEditInputWidth}
-            onChangeComplete={(value) =>
-              void setSyncStorage({ [StorageKeys.EDIT_INPUT_WIDTH]: value })
-            }
-            enabled={editInputWidthEnabled}
-            onToggle={(value) =>
-              updateToggle(setEditInputWidthEnabled, StorageKeys.EDIT_INPUT_WIDTH_ENABLED, value)
-            }
-          />
-          <WidthSlider
-            label={t('sidebarWidth')}
-            value={sidebarWidth}
-            min={SIDEBAR_PX.min}
-            max={SIDEBAR_PX.max}
-            step={1}
-            valueFormatter={(value) => `${value}px`}
-            narrowLabel={t('sidebarWidthNarrow')}
-            wideLabel={t('sidebarWidthWide')}
-            onChange={setSidebarWidth}
-            onChangeComplete={(value) =>
-              void setSyncStorage({ [StorageKeys.SIDEBAR_WIDTH]: value })
-            }
-          />
-          <ToggleRow
-            id="sidebar-auto-hide"
-            title={t('sidebarAutoHide')}
-            description={t('sidebarAutoHideHint')}
-            checked={sidebarAutoHide}
-            onChange={(value) =>
-              updateToggle(setSidebarAutoHide, StorageKeys.GV_SIDEBAR_AUTO_HIDE, value)
-            }
-          />
-          <ToggleRow
-            id="sidebar-full-hide"
-            title={t('sidebarFullHide')}
-            description={t('sidebarFullHideHint')}
-            checked={sidebarFullHide}
-            onChange={(value) =>
-              updateToggle(setSidebarFullHide, StorageKeys.GV_SIDEBAR_FULL_HIDE, value)
-            }
-          />
+          </Subsection>
+          <Subsection title={t('sidebar')}>
+            <ToggleRow
+              id="sidebar-auto-hide"
+              title={t('sidebarAutoHide')}
+              description={t('sidebarAutoHideHint')}
+              checked={sidebarAutoHide}
+              onChange={(value) =>
+                updateToggle(setSidebarAutoHide, StorageKeys.GV_SIDEBAR_AUTO_HIDE, value)
+              }
+            />
+            <ToggleRow
+              id="sidebar-full-hide"
+              title={t('sidebarFullHide')}
+              description={t('sidebarFullHideHint')}
+              checked={sidebarFullHide}
+              onChange={(value) =>
+                updateToggle(setSidebarFullHide, StorageKeys.GV_SIDEBAR_FULL_HIDE, value)
+              }
+            />
+          </Subsection>
         </Section>
 
         <Section title={t('inputOptions')}>

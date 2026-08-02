@@ -1505,6 +1505,15 @@
   "layoutOptions": {
     "message": "Layout"
   },
+  "general": {
+    "message": "General"
+  },
+  "text": {
+    "message": "Text"
+  },
+  "sidebar": {
+    "message": "Sidebar"
+  },
   "inputOptions": {
     "message": "Input"
   },
