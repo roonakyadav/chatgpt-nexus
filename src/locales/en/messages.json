@@ -182,6 +182,18 @@
   "pm_empty": {
     "message": "No prompts yet"
   },
+  "pm_empty_title": {
+    "message": "Prompt Manager"
+  },
+  "pm_empty_description": {
+    "message": "Save prompts you reuse often and access them instantly."
+  },
+  "pm_empty_create_first": {
+    "message": "+ Create First Prompt"
+  },
+  "pm_empty_import": {
+    "message": "Import existing prompts →"
+  },
   "pm_copy": {
     "message": "Copy"
   },
