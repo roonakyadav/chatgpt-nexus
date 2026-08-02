@@ -1,6 +1,6 @@
 /**
- * Gentle dark mode — softens ChatGPT's dark theme by replacing its pure-black
- * surfaces with muted dark grays. Opt-in from the extension popup.
+ * Theme system — applies custom color themes to ChatGPT's dark mode.
+ * Supports multiple themes: default, gentler-dark, forest, crimson, midnight-blue, graphite.
  *
  * ChatGPT's dark theme drives every surface from CSS custom properties that
  * resolve to pure black (#000): the main chat/page surface, the sidebar, and
@@ -8,31 +8,71 @@
  * override just those (plus the border tokens) with the user's palette. The
  * override is scoped to ChatGPT's own dark class (`html.dark`), so it is
  * automatically a no-op in light mode — no JS theme detection needed.
- *
- * Palette:
- *   #1f1f1e — main / base background
- *   #2c2c2a — elevated "front" panels (menus, dialogs)
- *   #3d3d3b — borders / strokes
  */
 
-const STYLE_ID = 'gv-gentle-dark-style';
-const STORAGE_KEY = 'gvGentleDarkMode';
-const DEFAULT_ENABLED = false;
+const STYLE_ID = 'gv-theme-style';
+const STORAGE_KEY = 'gvTheme';
+const DEFAULT_THEME = 'default';
 
-// We redefine the tokens on BOTH html and body: ChatGPT re-declares them on
-// <body>, so an html-only override would be shadowed for the whole document.
-const CSS = `
+type Theme = 'default' | 'gentler-dark' | 'forest' | 'crimson' | 'midnight-blue' | 'graphite';
+
+interface ThemePalette {
+  mainSurface: string;
+  elevatedSurface: string;
+  border: string;
+}
+
+const THEME_PALETTES: Record<Theme, ThemePalette> = {
+  default: {
+    mainSurface: '#000000',
+    elevatedSurface: '#000000',
+    border: '#3d3d3b',
+  },
+  'gentler-dark': {
+    mainSurface: '#1f1f1e',
+    elevatedSurface: '#2c2c2a',
+    border: '#3d3d3b',
+  },
+  forest: {
+    mainSurface: '#1a2e1a',
+    elevatedSurface: '#2d4a2d',
+    border: '#3d5f3d',
+  },
+  crimson: {
+    mainSurface: '#2e1a1a',
+    elevatedSurface: '#4a2d2d',
+    border: '#5f3d3d',
+  },
+  'midnight-blue': {
+    mainSurface: '#1a1e2e',
+    elevatedSurface: '#2d324a',
+    border: '#3d425f',
+  },
+  graphite: {
+    mainSurface: '#1a1a1a',
+    elevatedSurface: '#2d2d2d',
+    border: '#3d3d3d',
+  },
+};
+
+function generateCSS(palette: ThemePalette): string {
+  // For default theme, return empty CSS (no overrides needed)
+  if (palette.mainSurface === '#000000' && palette.elevatedSurface === '#000000') {
+    return '';
+  }
+
+  return `
   html.dark,
   html.dark body {
-    --main-surface-primary: #1f1f1e !important;
-    --sidebar-surface-primary: #1f1f1e !important;
-    --bg-elevated-secondary: #2c2c2a !important;
-    --border-default: #3d3d3b !important;
-    --border-medium: #3d3d3b !important;
-    --border-heavy: #3d3d3b !important;
-    --border-sharp: #3d3d3b !important;
-    --border-light: #3d3d3b !important;
-    background-color: #1f1f1e !important;
+    --main-surface-primary: ${palette.mainSurface} !important;
+    --sidebar-surface-primary: ${palette.mainSurface} !important;
+    --bg-elevated-secondary: ${palette.elevatedSurface} !important;
+    --border-default: ${palette.border} !important;
+    --border-medium: ${palette.border} !important;
+    --border-heavy: ${palette.border} !important;
+    --border-sharp: ${palette.border} !important;
+    --border-light: ${palette.border} !important;
+    background-color: ${palette.mainSurface} !important;
   }
   /* Second token family (introduced for Codex, merged site-wide by ChatGPT's
      2026-07 redesign — the Chat/Work split): --bg-secondary-surface paints
@@ -41,9 +81,9 @@ const CSS = `
      All three resolve to #000 in dark mode. */
   html.dark,
   html.dark body {
-    --bg-secondary-surface: #1f1f1e !important;
-    --sidebar-surface: #1f1f1e !important;
-    --component-sidebar-bg: #1f1f1e !important;
+    --bg-secondary-surface: ${palette.mainSurface} !important;
+    --sidebar-surface: ${palette.mainSurface} !important;
+    --component-sidebar-bg: ${palette.mainSurface} !important;
   }
   /* ChatGPT's 2026-07 redesign re-declares --main-surface-primary on EVERY
      dark-scope element (\`html.dark :not(:where(.light, .light *))\`), which
@@ -56,19 +96,19 @@ const CSS = `
      winning, or every floating panel would flatten to the base color. */
   html.dark,
   html.dark :not(:where(.light, .light *)) {
-    --main-surface-primary: #1f1f1e;
+    --main-surface-primary: ${palette.mainSurface};
   }
   /* The sticky conversation header paints its own opaque black instead of using
      the surface token, so the token override alone leaves a black bar at top. */
   html.dark header.sticky.top-0 {
-    background-color: #1f1f1e !important;
+    background-color: ${palette.mainSurface} !important;
   }
   /* The composer fade overlay (fades messages out behind the input box) uses a
      hardcoded black background masked to fade in — leaving a black band at the
      bottom over the now-gray page. Recolor it to the gentle background so the
      fade blends in instead of showing as a dark strip. */
   html.dark [class*="thread-bottom-container"]::after {
-    background-color: #1f1f1e !important;
+    background-color: ${palette.mainSurface} !important;
   }
   /* ChatGPT re-declares the surface tokens on a wrapper below <body>, so the
      variable overrides above don't reach deep nodes (e.g. code-block headers).
@@ -81,18 +121,27 @@ const CSS = `
   html.dark .bg-token-main-surface-primary,
   html.dark .bg-token-sidebar-surface-primary,
   html.dark .bg-surface-primary {
-    background-color: #1f1f1e !important;
+    background-color: ${palette.mainSurface} !important;
   }
 `;
+}
 
-function applyStyle(): void {
+function applyStyle(theme: Theme): void {
+  const palette = THEME_PALETTES[theme];
+  const css = generateCSS(palette);
+
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   if (!style) {
     style = document.createElement('style');
     style.id = STYLE_ID;
     (document.head || document.documentElement).appendChild(style);
   }
-  style.textContent = CSS;
+
+  if (css) {
+    style.textContent = css;
+  } else {
+    style.remove();
+  }
 }
 
 function removeStyle(): void {
@@ -100,8 +149,11 @@ function removeStyle(): void {
 }
 
 export function startGentleDarkMode(): void {
-  chrome.storage?.sync?.get({ [STORAGE_KEY]: DEFAULT_ENABLED }, (res) => {
-    if (res?.[STORAGE_KEY] === true) applyStyle();
+  chrome.storage?.sync?.get({ [STORAGE_KEY]: DEFAULT_THEME }, (res) => {
+    const theme = res?.[STORAGE_KEY] as Theme;
+    if (theme && theme !== 'default') {
+      applyStyle(theme);
+    }
   });
 
   const storageChangeHandler = (
@@ -109,8 +161,12 @@ export function startGentleDarkMode(): void {
     area: string,
   ) => {
     if (area === 'sync' && changes[STORAGE_KEY]) {
-      if (changes[STORAGE_KEY].newValue === true) applyStyle();
-      else removeStyle();
+      const newTheme = changes[STORAGE_KEY].newValue as Theme;
+      if (newTheme && newTheme !== 'default') {
+        applyStyle(newTheme);
+      } else {
+        removeStyle();
+      }
     }
   };
 

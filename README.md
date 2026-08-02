@@ -1,224 +1,34 @@
-<div align="center">
+# ChatGPT nexus
 
-# ✨ ChatGPT Nexus
+ChatGPT nexus is a local browser extension that adapts a nexus-style chat workflow to ChatGPT.
 
-### The Ultimate Productivity Extension for ChatGPT
+This repository contains the source code for a standalone Chrome/Edge extension intended for local development and maintenance.
 
-Transform ChatGPT into a powerful workspace with timeline navigation, prompt management, conversation folders, exports, favorites, text pins, layout customization, and dozens of quality-of-life improvements.
 
-<br>
+## Features
 
-<p align="center">
-<img src="https://img.shields.io/github/stars/pionxzh/chatgpt-nexus?style=for-the-badge&logo=github">
-<img src="https://img.shields.io/github/license/pionxzh/chatgpt-nexus?style=for-the-badge">
-<img src="https://img.shields.io/github/last-commit/pionxzh/chatgpt-nexus?style=for-the-badge">
-<img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white">
-<img src="https://img.shields.io/badge/Edge-Compatible-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white">
-</p>
+- ChatGPT conversation timeline with dot navigation, preview, highlighting, and starred positions.
+- Timeline text pins for long answers: pin exact spots inside a message, switch pins within the selected timeline dot, select pins from the page, and delete pins with an inline delete control.
+- Sidebar folders for organizing conversations locally, with an optional layout that places the folder list below the Projects section (instead of pinned at the top) so it scrolls together with the chat list.
+- Undo a temporary chat: from inside a temporary chat, scrape the transcript and build a handoff prompt that continues it in a normal conversation (delivered inline, or auto-attached as a `.txt` for long chats).
+- Prompt Manager with tags, search, prompt import/export, compact/comfortable display modes, and click-to-copy or click-to-insert behavior.
+- Input enhancements, including input collapse, draft autosave, quote reply, Vim-style input option, Ctrl+Enter send option, and auto-scroll prevention.
+- Markdown, KaTeX/LaTeX, formula copy, and Mermaid rendering support, including mind maps.
+- Conversation export and local backup/import for prompts, folders, settings, and timeline hierarchy.
+- One-click single-conversation export to Markdown or JSON from the chat header (piggybacks ChatGPT's own conversation fetch — no separate API call, no extra permissions). The export button opens a small menu: export the entire conversation, or pick individual messages and export only the selected subset.
+- Cross-conversation favorites: star any user message, jump back to it from the favorites panel even after switching conversations.
+- Layout controls for chat width, font size, input width, sidebar width, and folder spacing.
+- A small support popover with Ko-fi and optional payment QR codes.
 
----
+## Install Locally
 
-### 🚀 Built for people who practically live inside ChatGPT.
+Requirements:
 
-Timeline • Prompt Manager • Favorites • Export • Folders • Text Pins • Rich Markdown • Mermaid • KaTeX • Layout Customization
+- Node.js 20 or newer.
+- npm.
+- Chrome or Edge with Developer Mode enabled.
 
----
-
-⭐ **If ChatGPT Nexus improves your workflow, consider starring the repository!**
-
-</div>
-
----
-
-# 📸 Preview
-
-> Replace these placeholders with screenshots or GIFs.
-
-| Timeline | Prompt Manager |
-|-----------|----------------|
-| ![](docs/images/timeline.png) | ![](docs/images/prompt-manager.png) |
-
-| Folder Sidebar | Export |
-|----------------|--------|
-| ![](docs/images/folders.png) | ![](docs/images/export.png) |
-
----
-
-# Why ChatGPT Nexus?
-
-ChatGPT is an incredible AI assistant—but heavy users quickly discover its limitations.
-
-ChatGPT Nexus fills those gaps by adding productivity tools directly into the ChatGPT interface without changing the way you already work.
-
-Instead of opening dozens of chats, losing important prompts, or endlessly scrolling through conversations, Nexus adds an entirely new productivity layer on top of ChatGPT.
-
-It feels like features that should have existed from day one.
-
----
-
-# ✨ Features
-
-## 🕒 Timeline Navigation
-
-Navigate huge conversations instantly.
-
-- Visual conversation timeline
-- Dot navigation
-- Hover previews
-- Active message highlighting
-- Star important turns
-- Jump instantly between messages
-- Persistent timeline hierarchy
-
----
-
-## 📌 Text Pins
-
-Pin precise locations inside long responses.
-
-Perfect for:
-
-- documentation
-- tutorials
-- research
-- debugging
-- books
-- code explanations
-
-Features include:
-
-- Multiple pins per message
-- Previous / Next navigation
-- Delete pins individually
-- Stable across page rerenders
-
----
-
-## 📂 Conversation Folders
-
-Organize chats like a real workspace.
-
-- Local folders
-- Drag & drop organization
-- Optional placement beneath Projects
-- Persistent storage
-- Native ChatGPT appearance
-
----
-
-## 📝 Prompt Manager
-
-A complete prompt library built into ChatGPT.
-
-✔ Search
-
-✔ Tags
-
-✔ Favorites
-
-✔ Import / Export
-
-✔ Compact mode
-
-✔ Comfortable mode
-
-✔ Click-to-copy
-
-✔ Click-to-insert
-
-✔ Backup
-
----
-
-## ⭐ Cross-Conversation Favorites
-
-Bookmark important prompts forever.
-
-- Favorite any user message
-- Jump back instantly
-- Works across conversations
-- Searchable
-- Persistent
-
----
-
-## 📤 Conversation Export
-
-Export conversations in multiple formats.
-
-Supported formats:
-
-- Markdown
-- Simplified Markdown
-- JSON
-- Simplified JSON
-- HTML
-
-Export either:
-
-- Entire conversation
-
-or
-
-- Selected messages only
-
----
-
-## 🧠 Rich Rendering
-
-Native support for:
-
-- Markdown
-- KaTeX
-- LaTeX
-- Mermaid
-- Mind Maps
-- Formula Copy
-- Syntax Highlighting
-
----
-
-## ⚡ Productivity Enhancements
-
-- Draft autosave
-- Ctrl + Enter to send
-- Quote reply
-- Vim mode
-- Auto-scroll prevention
-- Input collapse
-- Layout customization
-
----
-
-# 🎯 Designed for
-
-- Developers
-- Researchers
-- Students
-- Writers
-- Prompt Engineers
-- AI Power Users
-- Teams
-
----
-
-# 📦 Installation
-
-## Requirements
-
-- Node.js 20+
-- npm
-- Chrome or Microsoft Edge
-
-Clone the repository
-
-```bash
-git clone https://github.com/roonakyadav/chatgpt-nexus.git
-
-cd chatgpt-nexus
-```
-
-Install dependencies
+Install dependencies:
 
 ```bash
 npm install

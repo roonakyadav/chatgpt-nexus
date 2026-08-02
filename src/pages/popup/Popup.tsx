@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import browser from 'webextension-polyfill';
 
 import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
-import { StorageKeys } from '@/core/types/common';
+import { StorageKeys, type Theme, THEMES } from '@/core/types/common';
 import {
   DEFAULT_SINGLE_CONV_EXPORT_FORMAT,
   type SingleConvExportFormat,
@@ -174,7 +174,7 @@ export default function Popup() {
     DEFAULT_SINGLE_CONV_EXPORT_FORMAT,
   );
   const [mermaidEnabled, setMermaidEnabled] = useState(true);
-  const [gentleDarkEnabled, setGentleDarkEnabled] = useState(false);
+  const [theme, setTheme] = useState<Theme>('default');
   const [promptHidden, setPromptHidden] = useState(false);
   const [promptInsertOnClick, setPromptInsertOnClick] = useState(false);
   const [promptViewMode, setPromptViewMode] = useState<PromptViewMode>('comfortable');
@@ -324,6 +324,7 @@ export default function Popup() {
         [StorageKeys.QUOTE_REPLY_ENABLED]: true,
         gvFormulaCopyFormat: 'latex',
         [StorageKeys.MERMAID_ENABLED]: true,
+        [StorageKeys.THEME]: 'default',
         [StorageKeys.GENTLE_DARK_ENABLED]: false,
         [StorageKeys.HIDE_PROMPT_MANAGER]: false,
         [StorageKeys.PROMPT_INSERT_ON_CLICK]: false,
@@ -432,7 +433,19 @@ export default function Popup() {
             : 'latex',
         );
         setMermaidEnabled(result[StorageKeys.MERMAID_ENABLED] !== false);
-        setGentleDarkEnabled(result[StorageKeys.GENTLE_DARK_ENABLED] === true);
+        // Migration: if old gentle dark toggle was enabled, migrate to gentler-dark theme
+        const storedTheme = result[StorageKeys.THEME] as Theme | undefined;
+        if (storedTheme && THEMES.includes(storedTheme)) {
+          setTheme(storedTheme);
+        } else if (result[StorageKeys.GENTLE_DARK_ENABLED] === true) {
+          setTheme('gentler-dark');
+          // Persist the migrated theme
+          void setSyncStorage({ [StorageKeys.THEME]: 'gentler-dark' });
+          // Clear the old toggle
+          void setSyncStorage({ [StorageKeys.GENTLE_DARK_ENABLED]: false });
+        } else {
+          setTheme('default');
+        }
         setPromptHidden(result[StorageKeys.HIDE_PROMPT_MANAGER] === true);
         setPromptInsertOnClick(result[StorageKeys.PROMPT_INSERT_ON_CLICK] === true);
         setPromptViewMode(
@@ -989,15 +1002,84 @@ export default function Popup() {
         </Section>
 
         <Section title={t('appearanceOptions')}>
-          <ToggleRow
-            id="gentle-dark"
-            title={t('gentleDarkMode')}
-            description={t('gentleDarkModeHint')}
-            checked={gentleDarkEnabled}
-            onChange={(value) =>
-              updateToggle(setGentleDarkEnabled, StorageKeys.GENTLE_DARK_ENABLED, value)
-            }
-          />
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">{t('themes')}</Label>
+            <div className="space-y-2">
+              {THEMES.map((themeValue) => {
+                const themeConfig: Record<
+                  Theme,
+                  { name: string; hint: string; colors: string[] }
+                > = {
+                  default: {
+                    name: t('themeDefault'),
+                    hint: t('themeDefaultHint'),
+                    colors: ['#000000', '#1a1a1a', '#2d2d2d', '#404040'],
+                  },
+                  'gentler-dark': {
+                    name: t('themeGentlerDark'),
+                    hint: t('themeGentlerDarkHint'),
+                    colors: ['#1f1f1e', '#2c2c2a', '#3d3d3b', '#4a4a48'],
+                  },
+                  forest: {
+                    name: t('themeForest'),
+                    hint: t('themeForestHint'),
+                    colors: ['#1a2e1a', '#2d4a2d', '#3d5f3d', '#4a734a'],
+                  },
+                  crimson: {
+                    name: t('themeCrimson'),
+                    hint: t('themeCrimsonHint'),
+                    colors: ['#2e1a1a', '#4a2d2d', '#5f3d3d', '#734a4a'],
+                  },
+                  'midnight-blue': {
+                    name: t('themeMidnightBlue'),
+                    hint: t('themeMidnightBlueHint'),
+                    colors: ['#1a1e2e', '#2d324a', '#3d425f', '#4a5273'],
+                  },
+                  graphite: {
+                    name: t('themeGraphite'),
+                    hint: t('themeGraphiteHint'),
+                    colors: ['#1a1a1a', '#2d2d2d', '#3d3d3d', '#4a4a4a'],
+                  },
+                };
+                const config = themeConfig[themeValue];
+                return (
+                  <label
+                    key={themeValue}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/50"
+                    htmlFor={`theme-${themeValue}`}
+                  >
+                    <input
+                      id={`theme-${themeValue}`}
+                      type="radio"
+                      name="theme"
+                      value={themeValue}
+                      checked={theme === themeValue}
+                      onChange={() => {
+                        setTheme(themeValue);
+                        void setSyncStorage({ [StorageKeys.THEME]: themeValue });
+                      }}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{config.name}</span>
+                        <div className="flex gap-1">
+                          {config.colors.map((color, i) => (
+                            <div
+                              key={i}
+                              className="h-3 w-3 rounded-full border"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground mt-1 text-xs">{config.hint}</p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
         </Section>
 
         <Section title={t('singleConvExportOptions')}>

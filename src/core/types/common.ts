@@ -87,9 +87,17 @@ export const StorageKeys = {
   SIDEBAR_WIDTH: 'gptSidebarWidth',
   SIDEBAR_WIDTH_ENABLED: 'gvSidebarWidthEnabled',
   /**
+   * Theme selector: stores the selected theme for ChatGPT appearance.
+   * Values: 'default', 'gentler-dark', 'forest', 'crimson', 'midnight-blue', 'graphite'
+   * Default: 'default'
+   * See src/pages/content/gentleDarkMode/index.ts.
+   */
+  THEME: 'gvTheme',
+  /**
    * Gentle dark mode: when true (and ChatGPT is in dark mode), replaces the
    * pure-black dark surfaces with softer dark grays. Default false.
    * See src/pages/content/gentleDarkMode/index.ts.
+   * @deprecated - Use THEME instead. Kept for migration.
    */
   GENTLE_DARK_ENABLED: 'gvGentleDarkMode',
 
@@ -200,6 +208,23 @@ export const StorageKeys = {
   ANNOUNCEMENT_CACHE_V1: 'gvAnnouncementCacheV1',
   ANNOUNCEMENT_LAST_BUBBLE_AT: 'gvAnnouncementLastBubbleAt',
   ANNOUNCEMENT_LAST_SEEN_AT: 'gvAnnouncementLastSeenAt',
-} as const;
+}
+
+export type Theme =
+  | 'default'
+  | 'gentler-dark'
+  | 'forest'
+  | 'crimson'
+  | 'midnight-blue'
+  | 'graphite';
+
+export const THEMES: readonly Theme[] = [
+  'default',
+  'gentler-dark',
+  'forest',
+  'crimson',
+  'midnight-blue',
+  'graphite',
+] as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

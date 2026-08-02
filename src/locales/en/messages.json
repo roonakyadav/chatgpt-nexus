@@ -1499,6 +1499,45 @@
   "appearanceOptions": {
     "message": "Appearance"
   },
+  "themes": {
+    "message": "Themes"
+  },
+  "themeDefault": {
+    "message": "Default Dark"
+  },
+  "themeDefaultHint": {
+    "message": "Current default ChatGPT appearance."
+  },
+  "themeGentlerDark": {
+    "message": "Gentler Dark"
+  },
+  "themeGentlerDarkHint": {
+    "message": "Soft dark grays for a gentler, less harsh look."
+  },
+  "themeForest": {
+    "message": "Forest"
+  },
+  "themeForestHint": {
+    "message": "Deep forest green accents with dark olive surfaces."
+  },
+  "themeCrimson": {
+    "message": "Crimson"
+  },
+  "themeCrimsonHint": {
+    "message": "Deep burgundy accents with dark wine surfaces."
+  },
+  "themeMidnightBlue": {
+    "message": "Midnight Blue"
+  },
+  "themeMidnightBlueHint": {
+    "message": "Navy and blue-gray palette with minimal saturation."
+  },
+  "themeGraphite": {
+    "message": "Graphite"
+  },
+  "themeGraphiteHint": {
+    "message": "Neutral charcoal theme, almost monochrome."
+  },
   "gentleDarkMode": {
     "message": "Gentler dark mode"
   },
