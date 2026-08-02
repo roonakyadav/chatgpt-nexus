@@ -542,6 +542,15 @@
   "timelineOptions": {
     "message": "Timeline"
   },
+  "navigationStyle": {
+    "message": "Navigation Style"
+  },
+  "features": {
+    "message": "Features"
+  },
+  "advanced": {
+    "message": "Advanced"
+  },
   "enableTimeline": {
     "message": "Enable timeline"
   },

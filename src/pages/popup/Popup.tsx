@@ -111,6 +111,39 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+function CollapsibleSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-border/40 border-b pb-6">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <h3 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{title}</h3>
+        <svg
+          className={`text-muted-foreground h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && <div className="space-y-3 mt-4">{children}</div>}
+    </div>
+  );
+}
+
 export default function Popup() {
   const { t } = useLanguage();
   const [showStarredHistory, setShowStarredHistory] = useState(false);
@@ -567,87 +600,97 @@ export default function Popup() {
               updateToggle(setTimelineEnabled, StorageKeys.TIMELINE_ENABLED, value)
             }
           />
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={timelineMode === 'flow' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() =>
-                updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'flow')
-              }
-            >
-              {t('flow')}
-            </Button>
-            <Button
-              type="button"
-              variant={timelineMode === 'jump' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() =>
-                updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'jump')
-              }
-            >
-              {t('jump')}
-            </Button>
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">{t('navigationStyle')}</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={timelineMode === 'flow' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() =>
+                  updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'flow')
+                }
+              >
+                {t('flow')}
+              </Button>
+              <Button
+                type="button"
+                variant={timelineMode === 'jump' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() =>
+                  updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'jump')
+                }
+              >
+                {t('jump')}
+              </Button>
+            </div>
           </div>
-          <ToggleRow
-            id="timeline-hidden"
-            title={t('hideOuterContainer')}
-            checked={timelineHidden}
-            onChange={(value) =>
-              updateToggle(setTimelineHidden, StorageKeys.TIMELINE_HIDE_CONTAINER, value)
-            }
-          />
-          <ToggleRow
-            id="timeline-draggable"
-            title={t('draggableTimeline')}
-            checked={timelineDraggable}
-            onChange={(value) =>
-              updateToggle(setTimelineDraggable, StorageKeys.TIMELINE_DRAGGABLE, value)
-            }
-          />
-          <ToggleRow
-            id="timeline-preview"
-            title={t('pinTimelinePreview')}
-            description={t('pinTimelinePreviewHint')}
-            checked={timelinePreviewPinned}
-            onChange={(value) =>
-              updateToggle(setTimelinePreviewPinned, StorageKeys.TIMELINE_PREVIEW_PINNED, value)
-            }
-          />
-          <ToggleRow
-            id="timeline-level"
-            title={t('enableMarkerLevel')}
-            description={t('enableMarkerLevelHint')}
-            checked={timelineMarkerLevel}
-            onChange={(value) =>
-              updateToggle(setTimelineMarkerLevel, StorageKeys.TIMELINE_MARKER_LEVEL, value)
-            }
-          />
-          <ToggleRow
-            id="fork-enabled"
-            title={t('enableForkFeature')}
-            description={t('enableForkFeatureHint')}
-            checked={forkEnabled}
-            onChange={(value) => updateToggle(setForkEnabled, StorageKeys.FORK_ENABLED, value)}
-          />
-          <div className="flex gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void setSyncStorage({ [StorageKeys.TIMELINE_POSITION]: null })}
-            >
-              {t('resetTimelinePosition')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowStarredHistory(true)}
-            >
-              {t('viewStarredHistory')}
-            </Button>
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">{t('features')}</Label>
+            <div className="space-y-3">
+              <ToggleRow
+                id="timeline-preview"
+                title={t('pinTimelinePreview')}
+                description={t('pinTimelinePreviewHint')}
+                checked={timelinePreviewPinned}
+                onChange={(value) =>
+                  updateToggle(setTimelinePreviewPinned, StorageKeys.TIMELINE_PREVIEW_PINNED, value)
+                }
+              />
+              <ToggleRow
+                id="timeline-level"
+                title={t('enableMarkerLevel')}
+                description={t('enableMarkerLevelHint')}
+                checked={timelineMarkerLevel}
+                onChange={(value) =>
+                  updateToggle(setTimelineMarkerLevel, StorageKeys.TIMELINE_MARKER_LEVEL, value)
+                }
+              />
+            </div>
           </div>
+          <CollapsibleSection title={t('advanced')} defaultOpen={false}>
+            <ToggleRow
+              id="timeline-hidden"
+              title={t('hideOuterContainer')}
+              checked={timelineHidden}
+              onChange={(value) =>
+                updateToggle(setTimelineHidden, StorageKeys.TIMELINE_HIDE_CONTAINER, value)
+              }
+            />
+            <ToggleRow
+              id="timeline-draggable"
+              title={t('draggableTimeline')}
+              checked={timelineDraggable}
+              onChange={(value) =>
+                updateToggle(setTimelineDraggable, StorageKeys.TIMELINE_DRAGGABLE, value)
+              }
+            />
+            <ToggleRow
+              id="fork-enabled"
+              title={t('enableForkFeature')}
+              description={t('enableForkFeatureHint')}
+              checked={forkEnabled}
+              onChange={(value) => updateToggle(setForkEnabled, StorageKeys.FORK_ENABLED, value)}
+            />
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void setSyncStorage({ [StorageKeys.TIMELINE_POSITION]: null })}
+              >
+                {t('resetTimelinePosition')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStarredHistory(true)}
+              >
+                {t('viewStarredHistory')}
+              </Button>
+            </div>
+          </CollapsibleSection>
         </Section>
 
         <Section title={t('folder_title')}>
