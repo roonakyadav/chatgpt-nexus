@@ -1086,16 +1086,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       if (filtered.length === 0) {
         const empty = createEl('div', 'gv-pm-empty');
         empty.innerHTML = `
-          <div class="gv-pm-empty-illustration">
-            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="60" cy="60" r="50" stroke="currentColor" stroke-width="2" stroke-opacity="0.2"/>
-              <path d="M40 45h40M40 60h25M40 75h15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-opacity="0.4"/>
-              <circle cx="85" cy="35" r="8" fill="currentColor" fill-opacity="0.1"/>
-              <path d="M85 32v6M82 35h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.5"/>
-            </svg>
-          </div>
-          <h3 class="gv-pm-empty-title">${i18n.t('pm_empty_title') || 'Prompt Manager'}</h3>
-          <p class="gv-pm-empty-description">${i18n.t('pm_empty_description') || 'Save prompts you reuse often and access them instantly.'}</p>
+          <h3 class="gv-pm-empty-title">${i18n.t('pm_empty_title') || 'Your prompt library is empty'}</h3>
+          <p class="gv-pm-empty-description">${i18n.t('pm_empty_description') || 'Save prompts you use frequently and access them instantly in any conversation.'}</p>
           <button class="gv-pm-empty-primary-btn" type="button">
             ${i18n.t('pm_empty_create_first') || '+ Create First Prompt'}
           </button>
@@ -1104,57 +1096,47 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           </button>
         `;
         
-        // Apply inline styles for premium empty state appearance
+        // Apply inline styles for premium minimal empty state appearance
         empty.style.cssText = `
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          min-height: 300px;
-          padding: 40px 24px;
+          min-height: 200px;
+          padding: 32px 24px;
           text-align: center;
-          animation: fadeIn 180ms ease-out;
+          animation: fadeInScale 180ms ease-out;
         `;
-        
-        const illustration = empty.querySelector('.gv-pm-empty-illustration') as HTMLElement;
-        if (illustration) {
-          illustration.style.cssText = `
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            color: currentColor;
-            opacity: 0.6;
-          `;
-        }
         
         const title = empty.querySelector('.gv-pm-empty-title') as HTMLElement;
         if (title) {
           title.style.cssText = `
             margin: 0 0 8px 0;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: currentColor;
+            letter-spacing: -0.01em;
           `;
         }
         
         const description = empty.querySelector('.gv-pm-empty-description') as HTMLElement;
         if (description) {
           description.style.cssText = `
-            margin: 0 0 24px 0;
-            font-size: 14px;
-            line-height: 1.5;
+            margin: 0 0 20px 0;
+            font-size: 13px;
+            line-height: 1.4;
             color: currentColor;
-            opacity: 0.7;
-            max-width: 280px;
+            opacity: 0.6;
+            max-width: 260px;
           `;
         }
         
         const primaryBtn = empty.querySelector('.gv-pm-empty-primary-btn') as HTMLButtonElement;
         if (primaryBtn) {
           primaryBtn.style.cssText = `
-            margin-bottom: 12px;
-            padding: 10px 20px;
-            font-size: 14px;
+            margin-bottom: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
             font-weight: 500;
             background: currentColor;
             color: var(--gv-pm-bg, #fff);
@@ -1168,22 +1150,22 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const secondaryBtn = empty.querySelector('.gv-pm-empty-secondary-btn') as HTMLButtonElement;
         if (secondaryBtn) {
           secondaryBtn.style.cssText = `
-            padding: 8px 16px;
-            font-size: 13px;
+            padding: 6px 12px;
+            font-size: 12px;
             font-weight: 400;
             background: transparent;
             color: currentColor;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            opacity: 0.6;
+            opacity: 0.5;
             transition: opacity 150ms ease;
           `;
           secondaryBtn.addEventListener('mouseenter', () => {
-            secondaryBtn.style.opacity = '1';
+            secondaryBtn.style.opacity = '0.8';
           });
           secondaryBtn.addEventListener('mouseleave', () => {
-            secondaryBtn.style.opacity = '0.6';
+            secondaryBtn.style.opacity = '0.5';
           });
         }
         

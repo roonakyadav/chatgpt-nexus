@@ -183,10 +183,10 @@
     "message": "No prompts yet"
   },
   "pm_empty_title": {
-    "message": "Prompt Manager"
+    "message": "Your prompt library is empty"
   },
   "pm_empty_description": {
-    "message": "Save prompts you reuse often and access them instantly."
+    "message": "Save prompts you use frequently and access them instantly in any conversation."
   },
   "pm_empty_create_first": {
     "message": "+ Create First Prompt"
