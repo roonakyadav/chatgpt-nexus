@@ -1288,89 +1288,108 @@ export default function Popup() {
         </Section>
 
         <Section title={t('promptManagerOptions')}>
-          <ToggleRow
-            id="prompt-hidden"
-            title={t('hidePromptManager')}
-            description={t('hidePromptManagerHint')}
-            checked={promptHidden}
-            onChange={(value) =>
-              updateToggle(setPromptHidden, StorageKeys.HIDE_PROMPT_MANAGER, value)
-            }
-          />
-          <ToggleRow
-            id="prompt-insert"
-            title={t('promptInsertOnClick')}
-            description={t('promptInsertOnClickHint')}
-            checked={promptInsertOnClick}
-            onChange={(value) =>
-              updateToggle(setPromptInsertOnClick, StorageKeys.PROMPT_INSERT_ON_CLICK, value)
-            }
-          />
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={promptViewMode === 'comfortable' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() =>
-                updateToggle<PromptViewMode>(
-                  setPromptViewMode,
-                  StorageKeys.PROMPT_VIEW_MODE,
-                  'comfortable',
-                )
+          <Subsection title={t('general')}>
+            <ToggleRow
+              id="prompt-hidden"
+              title={t('hidePromptManager')}
+              description={t('hidePromptManagerHint')}
+              checked={promptHidden}
+              onChange={(value) =>
+                updateToggle(setPromptHidden, StorageKeys.HIDE_PROMPT_MANAGER, value)
               }
-            >
-              {t('pm_view_comfortable')}
-            </Button>
-            <Button
-              type="button"
-              variant={promptViewMode === 'compact' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() =>
-                updateToggle<PromptViewMode>(
-                  setPromptViewMode,
-                  StorageKeys.PROMPT_VIEW_MODE,
-                  'compact',
-                )
+            />
+          </Subsection>
+          <Subsection title={t('interaction')}>
+            <ToggleRow
+              id="prompt-insert"
+              title={t('promptInsertOnClick')}
+              description={t('promptInsertOnClickHint')}
+              checked={promptInsertOnClick}
+              onChange={(value) =>
+                updateToggle(setPromptInsertOnClick, StorageKeys.PROMPT_INSERT_ON_CLICK, value)
               }
-            >
-              {t('pm_view_compact')}
-            </Button>
-          </div>
-          <div className="space-y-2 pt-2">
-            <Label className="text-sm font-medium">{t('customWebsites')}</Label>
-            <div className="flex gap-2">
-              <input
-                value={customWebsiteInput}
-                onChange={(event) => setCustomWebsiteInput(event.target.value)}
-                placeholder="example.com"
-                className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
-              />
-              <Button type="button" size="sm" onClick={() => void addCustomWebsite()}>
-                {t('pm_add')}
-              </Button>
+            />
+          </Subsection>
+          <Subsection title={t('display')}>
+            <div className="flex rounded-md border-2 border-border/60 p-1">
+              <button
+                type="button"
+                className={`
+                  flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all
+                  ${promptViewMode === 'comfortable' 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }
+                `}
+                onClick={() =>
+                  updateToggle<PromptViewMode>(
+                    setPromptViewMode,
+                    StorageKeys.PROMPT_VIEW_MODE,
+                    'comfortable',
+                  )
+                }
+              >
+                {t('pm_view_comfortable')}
+              </button>
+              <button
+                type="button"
+                className={`
+                  flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all
+                  ${promptViewMode === 'compact' 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }
+                `}
+                onClick={() =>
+                  updateToggle<PromptViewMode>(
+                    setPromptViewMode,
+                    StorageKeys.PROMPT_VIEW_MODE,
+                    'compact',
+                  )
+                }
+              >
+                {t('pm_view_compact')}
+              </button>
             </div>
-            {customWebsiteNotice ? (
-              <p className="text-muted-foreground text-xs">{customWebsiteNotice}</p>
-            ) : null}
-            <div className="space-y-1">
-              {customWebsites.map((domain) => (
-                <div
-                  key={domain}
-                  className="flex items-center justify-between rounded-md border px-2 py-1 text-sm"
-                >
-                  <span>{domain}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void removeCustomWebsite(domain)}
+          </Subsection>
+          <Subsection title={t('websites')}>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('customWebsites')}</Label>
+              <div className="flex gap-2">
+                <input
+                  value={customWebsiteInput}
+                  onChange={(event) => setCustomWebsiteInput(event.target.value)}
+                  placeholder="example.com"
+                  className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
+                />
+                <Button type="button" size="sm" onClick={() => void addCustomWebsite()}>
+                  {t('pm_add')}
+                </Button>
+              </div>
+              {customWebsiteNotice ? (
+                <p className="text-muted-foreground text-xs">{customWebsiteNotice}</p>
+              ) : null}
+              <p className="text-muted-foreground text-xs">{t('customWebsitesHint')}</p>
+              <div className="space-y-1">
+                {customWebsites.map((domain) => (
+                  <div
+                    key={domain}
+                    className="flex items-center justify-between rounded-md border px-2 py-1 text-sm"
                   >
-                    {t('pm_delete')}
-                  </Button>
-                </div>
-              ))}
+                    <span>{domain}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void removeCustomWebsite(domain)}
+                    >
+                      {t('pm_delete')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </Subsection>
         </Section>
       </div>
 

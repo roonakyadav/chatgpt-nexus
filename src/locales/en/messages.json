@@ -722,6 +722,18 @@
   "promptManagerOptions": {
     "message": "Prompt Manager"
   },
+  "general": {
+    "message": "General"
+  },
+  "interaction": {
+    "message": "Interaction"
+  },
+  "display": {
+    "message": "Display"
+  },
+  "websites": {
+    "message": "Websites"
+  },
   "hidePromptManager": {
     "message": "Hide Prompt Manager"
   },
@@ -741,7 +753,7 @@
     "message": "Custom Websites Placeholder"
   },
   "customWebsitesHint": {
-    "message": "Custom Websites Hint"
+    "message": "Prompt Manager will also appear on these domains."
   },
   "addWebsite": {
     "message": "Add Website"
