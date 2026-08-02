@@ -700,66 +700,76 @@ export default function Popup() {
             checked={folderEnabled}
             onChange={(value) => updateToggle(setFolderEnabled, StorageKeys.FOLDER_ENABLED, value)}
           />
-          <ToggleRow
-            id="folder-floating"
-            title={t('enableFloatingFolderPanel')}
-            checked={folderFloating}
-            onChange={(value) =>
-              updateToggle(setFolderFloating, StorageKeys.FOLDER_FLOATING_MODE_ENABLED, value)
-            }
-          />
-          <ToggleRow
-            id="folder-hide-archived"
-            title={t('hideArchivedConversations')}
-            checked={hideArchived}
-            onChange={(value) =>
-              updateToggle(setHideArchived, StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS, value)
-            }
-          />
-          <ToggleRow
-            id="folder-project"
-            title={t('folderAsProject_enable')}
-            description={t('folderAsProject_description')}
-            checked={folderProjectEnabled}
-            onChange={(value) =>
-              updateToggle(setFolderProjectEnabled, StorageKeys.FOLDER_PROJECT_ENABLED, value)
-            }
-          />
-          <ToggleRow
-            id="folder-below-projects"
-            title={t('folderBelowProjects')}
-            description={t('folderBelowProjects_description')}
-            checked={folderBelowProjects}
-            onChange={(value) =>
-              updateToggle(setFolderBelowProjects, StorageKeys.GV_FOLDER_BELOW_PROJECTS, value)
-            }
-          />
-          <WidthSlider
-            label={t('folderSpacing')}
-            value={folderSpacing}
-            min={FOLDER_SPACING.min}
-            max={FOLDER_SPACING.max}
-            step={1}
-            narrowLabel={t('folderSpacingCompact')}
-            wideLabel={t('folderSpacingSpacious')}
-            onChange={(value) => setFolderSpacing(value)}
-            onChangeComplete={(value) =>
-              void setSyncStorage({ [StorageKeys.GV_FOLDER_SPACING]: value })
-            }
-          />
-          <WidthSlider
-            label={t('folderTreeIndent')}
-            value={folderTreeIndent}
-            min={FOLDER_TREE_INDENT.min}
-            max={FOLDER_TREE_INDENT.max}
-            step={1}
-            narrowLabel={t('folderTreeIndentCompact')}
-            wideLabel={t('folderTreeIndentSpacious')}
-            onChange={(value) => setFolderTreeIndent(value)}
-            onChangeComplete={(value) =>
-              void setSyncStorage({ [StorageKeys.GV_FOLDER_TREE_INDENT]: value })
-            }
-          />
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">{t('behavior')}</Label>
+            <div className="space-y-3">
+              <ToggleRow
+                id="folder-floating"
+                title={t('enableFloatingFolderPanel')}
+                checked={folderFloating}
+                onChange={(value) =>
+                  updateToggle(setFolderFloating, StorageKeys.FOLDER_FLOATING_MODE_ENABLED, value)
+                }
+              />
+              <ToggleRow
+                id="folder-hide-archived"
+                title={t('hideArchivedConversations')}
+                checked={hideArchived}
+                onChange={(value) =>
+                  updateToggle(setHideArchived, StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS, value)
+                }
+              />
+              <ToggleRow
+                id="folder-project"
+                title={t('folderAsProject_enable')}
+                description={t('folderAsProject_description')}
+                checked={folderProjectEnabled}
+                onChange={(value) =>
+                  updateToggle(setFolderProjectEnabled, StorageKeys.FOLDER_PROJECT_ENABLED, value)
+                }
+              />
+              <ToggleRow
+                id="folder-below-projects"
+                title={t('folderBelowProjects')}
+                description={t('folderBelowProjects_description')}
+                checked={folderBelowProjects}
+                onChange={(value) =>
+                  updateToggle(setFolderBelowProjects, StorageKeys.GV_FOLDER_BELOW_PROJECTS, value)
+                }
+              />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">{t('appearance')}</Label>
+            <div className="space-y-3">
+              <WidthSlider
+                label={t('folderSpacing')}
+                value={folderSpacing}
+                min={FOLDER_SPACING.min}
+                max={FOLDER_SPACING.max}
+                step={1}
+                narrowLabel={t('folderSpacingCompact')}
+                wideLabel={t('folderSpacingSpacious')}
+                onChange={(value) => setFolderSpacing(value)}
+                onChangeComplete={(value) =>
+                  void setSyncStorage({ [StorageKeys.GV_FOLDER_SPACING]: value })
+                }
+              />
+              <WidthSlider
+                label={t('folderTreeIndent')}
+                value={folderTreeIndent}
+                min={FOLDER_TREE_INDENT.min}
+                max={FOLDER_TREE_INDENT.max}
+                step={1}
+                narrowLabel={t('folderTreeIndentCompact')}
+                wideLabel={t('folderTreeIndentSpacious')}
+                onChange={(value) => setFolderTreeIndent(value)}
+                onChangeComplete={(value) =>
+                  void setSyncStorage({ [StorageKeys.GV_FOLDER_TREE_INDENT]: value })
+                }
+              />
+            </div>
+          </div>
         </Section>
 
         <Section title={t('layoutOptions')}>

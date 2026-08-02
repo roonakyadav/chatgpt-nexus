@@ -560,6 +560,12 @@
   "folderOptions": {
     "message": "Folder Options"
   },
+  "behavior": {
+    "message": "Behavior"
+  },
+  "appearance": {
+    "message": "Appearance"
+  },
   "enableFolderFeature": {
     "message": "Enable folders"
   },
