@@ -14,7 +14,6 @@ import {
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardTitle } from '../../components/ui/card';
 import { Label } from '../../components/ui/label';
 import { Select } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
@@ -105,10 +104,10 @@ function ToggleRow({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className="p-4">
-      <CardTitle className="mb-3">{title}</CardTitle>
-      <CardContent className="space-y-2 p-0">{children}</CardContent>
-    </Card>
+    <div className="border-border/40 border-b pb-6">
+      <h3 className="text-foreground/60 mb-4 text-xs font-bold tracking-widest uppercase">{title}</h3>
+      <div className="space-y-3">{children}</div>
+    </div>
   );
 }
 
@@ -547,12 +546,17 @@ export default function Popup() {
 
   return (
     <div className="bg-background text-foreground w-[360px]">
-      <div className="border-border/50 flex items-center justify-between border-b px-5 py-5">
-        <h1 className="text-primary text-2xl font-extrabold tracking-tight">{t('extName')}</h1>
+      <div className="border-border/50 flex items-center justify-between border-b px-5 py-4">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-primary text-xl font-semibold tracking-tight">{t('extName')}</h1>
+          {extVersion && (
+            <span className="text-muted-foreground text-xs font-medium">v{extVersion}</span>
+          )}
+        </div>
         <DarkModeToggle />
       </div>
 
-      <div className="flex flex-col gap-4 p-5">
+      <div className="flex flex-col gap-6 p-5">
         <Section title={t('timelineOptions')}>
           <ToggleRow
             id="timeline-enabled"
@@ -1200,8 +1204,7 @@ export default function Popup() {
         </Section>
       </div>
 
-      <div className="text-muted-foreground border-border/50 flex items-center justify-center gap-3 border-t px-5 py-3 text-center text-xs">
-        <span>{extVersion ? `v${extVersion}` : 'GPT-nexus'}</span>
+      <div className="text-muted-foreground border-border/50 flex items-center justify-center border-t px-5 py-3 text-center text-xs">
         <a
           href={PROJECT_REPOSITORY_URL}
           target="_blank"
