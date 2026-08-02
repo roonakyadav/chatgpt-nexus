@@ -734,6 +734,39 @@
   "websites": {
     "message": "Websites"
   },
+  "categoryGeneral": {
+    "message": "General"
+  },
+  "categoryTimeline": {
+    "message": "Timeline"
+  },
+  "categoryFolders": {
+    "message": "Folders"
+  },
+  "categoryLayout": {
+    "message": "Layout"
+  },
+  "categoryInput": {
+    "message": "Input"
+  },
+  "categoryMarkdown": {
+    "message": "Markdown"
+  },
+  "categoryExport": {
+    "message": "Export"
+  },
+  "categoryPromptManager": {
+    "message": "Prompt Manager"
+  },
+  "categoryAbout": {
+    "message": "About"
+  },
+  "about": {
+    "message": "About"
+  },
+  "settings": {
+    "message": "Settings"
+  },
   "hidePromptManager": {
     "message": "Hide Prompt Manager"
   },

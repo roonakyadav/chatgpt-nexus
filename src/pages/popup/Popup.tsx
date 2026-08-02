@@ -6,6 +6,29 @@ import browser from 'webextension-polyfill';
 
 import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
 import { StorageKeys, type Theme, THEMES } from '@/core/types/common';
+
+type PopupCategory =
+  | 'general'
+  | 'timeline'
+  | 'folders'
+  | 'layout'
+  | 'input'
+  | 'markdown'
+  | 'export'
+  | 'promptManager'
+  | 'about';
+
+const CATEGORIES: readonly PopupCategory[] = [
+  'general',
+  'timeline',
+  'folders',
+  'layout',
+  'input',
+  'markdown',
+  'export',
+  'promptManager',
+  'about',
+] as const;
 import {
   DEFAULT_SINGLE_CONV_EXPORT_FORMAT,
   type SingleConvExportFormat,
@@ -159,10 +182,85 @@ function Subsection({
   );
 }
 
+function CategoryNav({
+  selectedCategory,
+  onCategoryChange,
+}: {
+  selectedCategory: PopupCategory;
+  onCategoryChange: (category: PopupCategory) => void;
+}) {
+  const { t } = useLanguage();
+
+  const categoryLabels: Record<PopupCategory, string> = {
+    general: t('categoryGeneral'),
+    timeline: t('categoryTimeline'),
+    folders: t('categoryFolders'),
+    layout: t('categoryLayout'),
+    input: t('categoryInput'),
+    markdown: t('categoryMarkdown'),
+    export: t('categoryExport'),
+    promptManager: t('categoryPromptManager'),
+    about: t('categoryAbout'),
+  };
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <nav className="hidden md:flex w-[180px] flex-shrink-0 flex-col gap-1 py-4">
+        <h2 className="text-foreground/40 px-3 pb-2 text-[11px] font-bold tracking-widest uppercase">
+          {t('settings')}
+        </h2>
+        {CATEGORIES.map((category) => (
+          <button
+            key={category}
+            type="button"
+            onClick={() => onCategoryChange(category)}
+            className={`
+              flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-150
+              ${selectedCategory === category
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              }
+            `}
+          >
+            <span>{categoryLabels[category]}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Mobile wrapped pills */}
+      <nav className="md:hidden flex flex-col gap-3 border-b border-border/40 pb-4">
+        <h2 className="text-foreground/40 px-4 text-[11px] font-bold tracking-widest uppercase">
+          {t('settings')}
+        </h2>
+        <div className="flex flex-wrap gap-2 px-4">
+          {CATEGORIES.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => onCategoryChange(category)}
+              className={`
+                whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150
+                ${selectedCategory === category
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                }
+              `}
+            >
+              {categoryLabels[category]}
+            </button>
+          ))}
+        </div>
+      </nav>
+    </>
+  );
+}
+
 export default function Popup() {
   const { t } = useLanguage();
   const [showStarredHistory, setShowStarredHistory] = useState(false);
   const [extVersion, setExtVersion] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<PopupCategory>('general');
 
   const [timelineEnabled, setTimelineEnabled] = useState(true);
   const [timelineMode, setTimelineMode] = useState<ScrollMode>('flow');
@@ -232,6 +330,14 @@ export default function Popup() {
   const setSyncStorage = useCallback(async (items: Record<string, unknown>) => {
     await browser.storage.sync.set(items);
   }, []);
+
+  const handleCategoryChange = useCallback(
+    (category: PopupCategory) => {
+      setSelectedCategory(category);
+      void setSyncStorage({ [StorageKeys.GV_POPUP_SELECTED_CATEGORY]: category });
+    },
+    [setSyncStorage],
+  );
 
   /**
    * Read a user-picked font file, base64-encode it, push the metadata to
@@ -333,6 +439,7 @@ export default function Popup() {
 
     void browser.storage.sync
       .get({
+        [StorageKeys.GV_POPUP_SELECTED_CATEGORY]: 'general' as PopupCategory,
         [StorageKeys.TIMELINE_ENABLED]: true,
         [StorageKeys.TIMELINE_SCROLL_MODE]: 'flow',
         [StorageKeys.TIMELINE_HIDE_CONTAINER]: false,
@@ -480,6 +587,10 @@ export default function Popup() {
             : 'latex',
         );
         setMermaidEnabled(result[StorageKeys.MERMAID_ENABLED] !== false);
+        const storedCategory = result[StorageKeys.GV_POPUP_SELECTED_CATEGORY] as PopupCategory;
+        if (CATEGORIES.includes(storedCategory)) {
+          setSelectedCategory(storedCategory);
+        }
         // Migration: if old gentle dark toggle was enabled, migrate to gentler-dark theme
         const storedTheme = result[StorageKeys.THEME] as Theme | undefined;
         if (storedTheme && THEMES.includes(storedTheme)) {
@@ -593,8 +704,8 @@ export default function Popup() {
   }
 
   return (
-    <div className="bg-background text-foreground w-[360px]">
-      <div className="border-border/50 flex items-center justify-between border-b px-5 py-4">
+    <div className="bg-background text-foreground w-[540px]">
+      <div className="border-border/50 flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-baseline gap-3">
           <h1 className="text-primary text-xl font-semibold tracking-tight">{t('extName')}</h1>
           {extVersion && (
@@ -604,793 +715,846 @@ export default function Popup() {
         <DarkModeToggle />
       </div>
 
-      <div className="flex flex-col gap-6 p-5">
-        <Section title={t('timelineOptions')}>
-          <ToggleRow
-            id="timeline-enabled"
-            title={t('enableTimeline')}
-            description={t('enableTimelineDescription')}
-            checked={timelineEnabled}
-            onChange={(value) =>
-              updateToggle(setTimelineEnabled, StorageKeys.TIMELINE_ENABLED, value)
-            }
-          />
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">{t('navigationStyle')}</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={timelineMode === 'flow' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() =>
-                  updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'flow')
-                }
-              >
-                {t('flow')}
-              </Button>
-              <Button
-                type="button"
-                variant={timelineMode === 'jump' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() =>
-                  updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'jump')
-                }
-              >
-                {t('jump')}
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">{t('features')}</Label>
-            <div className="space-y-3">
-              <ToggleRow
-                id="timeline-preview"
-                title={t('pinTimelinePreview')}
-                description={t('pinTimelinePreviewHint')}
-                checked={timelinePreviewPinned}
-                onChange={(value) =>
-                  updateToggle(setTimelinePreviewPinned, StorageKeys.TIMELINE_PREVIEW_PINNED, value)
-                }
-              />
-              <ToggleRow
-                id="timeline-level"
-                title={t('enableMarkerLevel')}
-                description={t('enableMarkerLevelHint')}
-                checked={timelineMarkerLevel}
-                onChange={(value) =>
-                  updateToggle(setTimelineMarkerLevel, StorageKeys.TIMELINE_MARKER_LEVEL, value)
-                }
-              />
-            </div>
-          </div>
-          <CollapsibleSection title={t('advanced')} defaultOpen={false}>
-            <ToggleRow
-              id="timeline-hidden"
-              title={t('hideOuterContainer')}
-              checked={timelineHidden}
-              onChange={(value) =>
-                updateToggle(setTimelineHidden, StorageKeys.TIMELINE_HIDE_CONTAINER, value)
-              }
-            />
-            <ToggleRow
-              id="timeline-draggable"
-              title={t('draggableTimeline')}
-              checked={timelineDraggable}
-              onChange={(value) =>
-                updateToggle(setTimelineDraggable, StorageKeys.TIMELINE_DRAGGABLE, value)
-              }
-            />
-            <ToggleRow
-              id="fork-enabled"
-              title={t('enableForkFeature')}
-              description={t('enableForkFeatureHint')}
-              checked={forkEnabled}
-              onChange={(value) => updateToggle(setForkEnabled, StorageKeys.FORK_ENABLED, value)}
-            />
-            <div className="flex gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void setSyncStorage({ [StorageKeys.TIMELINE_POSITION]: null })}
-              >
-                {t('resetTimelinePosition')}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowStarredHistory(true)}
-              >
-                {t('viewStarredHistory')}
-              </Button>
-            </div>
-          </CollapsibleSection>
-        </Section>
-
-        <Section title={t('folder_title')}>
-          <ToggleRow
-            id="folder-enabled"
-            title={t('enableFolders')}
-            checked={folderEnabled}
-            onChange={(value) => updateToggle(setFolderEnabled, StorageKeys.FOLDER_ENABLED, value)}
-          />
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">{t('behavior')}</Label>
-            <div className="space-y-3">
-              <ToggleRow
-                id="folder-floating"
-                title={t('enableFloatingFolderPanel')}
-                checked={folderFloating}
-                onChange={(value) =>
-                  updateToggle(setFolderFloating, StorageKeys.FOLDER_FLOATING_MODE_ENABLED, value)
-                }
-              />
-              <ToggleRow
-                id="folder-hide-archived"
-                title={t('hideArchivedConversations')}
-                checked={hideArchived}
-                onChange={(value) =>
-                  updateToggle(setHideArchived, StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS, value)
-                }
-              />
-              <ToggleRow
-                id="folder-project"
-                title={t('folderAsProject_enable')}
-                description={t('folderAsProject_description')}
-                checked={folderProjectEnabled}
-                onChange={(value) =>
-                  updateToggle(setFolderProjectEnabled, StorageKeys.FOLDER_PROJECT_ENABLED, value)
-                }
-              />
-              <ToggleRow
-                id="folder-below-projects"
-                title={t('folderBelowProjects')}
-                description={t('folderBelowProjects_description')}
-                checked={folderBelowProjects}
-                onChange={(value) =>
-                  updateToggle(setFolderBelowProjects, StorageKeys.GV_FOLDER_BELOW_PROJECTS, value)
-                }
-              />
-            </div>
-          </div>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">{t('appearance')}</Label>
-            <div className="space-y-3">
-              <WidthSlider
-                label={t('folderSpacing')}
-                value={folderSpacing}
-                min={FOLDER_SPACING.min}
-                max={FOLDER_SPACING.max}
-                step={1}
-                narrowLabel={t('folderSpacingCompact')}
-                wideLabel={t('folderSpacingSpacious')}
-                onChange={(value) => setFolderSpacing(value)}
-                onChangeComplete={(value) =>
-                  void setSyncStorage({ [StorageKeys.GV_FOLDER_SPACING]: value })
-                }
-              />
-              <WidthSlider
-                label={t('folderTreeIndent')}
-                value={folderTreeIndent}
-                min={FOLDER_TREE_INDENT.min}
-                max={FOLDER_TREE_INDENT.max}
-                step={1}
-                narrowLabel={t('folderTreeIndentCompact')}
-                wideLabel={t('folderTreeIndentSpacious')}
-                onChange={(value) => setFolderTreeIndent(value)}
-                onChangeComplete={(value) =>
-                  void setSyncStorage({ [StorageKeys.GV_FOLDER_TREE_INDENT]: value })
-                }
-              />
-            </div>
-          </div>
-        </Section>
-
-        <Section title={t('layoutOptions')}>
-          <Subsection title={t('general')}>
-            <WidthSlider
-              label={t('chatWidth')}
-              value={chatWidth}
-              min={CHAT_PERCENT.min}
-              max={CHAT_PERCENT.max}
-              step={1}
-              narrowLabel={t('chatWidthNarrow')}
-              wideLabel={t('chatWidthWide')}
-              onChange={setChatWidth}
-              onChangeComplete={(value) => void setSyncStorage({ [StorageKeys.CHAT_WIDTH]: value })}
-              enabled={chatWidthEnabled}
-              onToggle={(value) =>
-                updateToggle(setChatWidthEnabled, StorageKeys.CHAT_WIDTH_ENABLED, value)
-              }
-            />
-            <WidthSlider
-              label={t('editInputWidth')}
-              value={editInputWidth}
-              min={EDIT_PERCENT.min}
-              max={EDIT_PERCENT.max}
-              step={1}
-              narrowLabel={t('chatWidthNarrow')}
-              wideLabel={t('chatWidthWide')}
-              onChange={setEditInputWidth}
-              onChangeComplete={(value) =>
-                void setSyncStorage({ [StorageKeys.EDIT_INPUT_WIDTH]: value })
-              }
-              enabled={editInputWidthEnabled}
-              onToggle={(value) =>
-                updateToggle(setEditInputWidthEnabled, StorageKeys.EDIT_INPUT_WIDTH_ENABLED, value)
-              }
-            />
-            <WidthSlider
-              label={t('sidebarWidth')}
-              value={sidebarWidth}
-              min={SIDEBAR_PX.min}
-              max={SIDEBAR_PX.max}
-              step={1}
-              valueFormatter={(value) => `${value}px`}
-              narrowLabel={t('sidebarWidthNarrow')}
-              wideLabel={t('sidebarWidthWide')}
-              onChange={setSidebarWidth}
-              onChangeComplete={(value) =>
-                void setSyncStorage({ [StorageKeys.SIDEBAR_WIDTH]: value })
-              }
-            />
-          </Subsection>
-          <Subsection title={t('text')}>
-            <WidthSlider
-              label={t('chatFontSize')}
-              value={chatFontSize}
-              min={CHAT_FONT_SIZE.min}
-              max={CHAT_FONT_SIZE.max}
-              step={1}
-              narrowLabel={t('chatFontSizeSmall')}
-              wideLabel={t('chatFontSizeLarge')}
-              onChange={setChatFontSize}
-              onChangeComplete={(value) =>
-                void setSyncStorage({ [StorageKeys.CHAT_FONT_SIZE]: value })
-              }
-              enabled={chatFontSizeEnabled}
-              onToggle={(value) =>
-                updateToggle(setChatFontSizeEnabled, StorageKeys.CHAT_FONT_SIZE_ENABLED, value)
-              }
-            />
-            <WidthSlider
-              label={t('codeFontSize')}
-              value={codeFontSize}
-              min={CODE_FONT_SIZE.min}
-              max={CODE_FONT_SIZE.max}
-              step={1}
-              narrowLabel={t('chatFontSizeSmall')}
-              wideLabel={t('chatFontSizeLarge')}
-              onChange={setCodeFontSize}
-              onChangeComplete={(value) =>
-                void setSyncStorage({ [StorageKeys.CODE_FONT_SIZE]: value })
-              }
-              enabled={codeFontSizeEnabled}
-              onToggle={(value) =>
-                updateToggle(setCodeFontSizeEnabled, StorageKeys.CODE_FONT_SIZE_ENABLED, value)
-              }
-            />
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="gv-font-family-select" className="text-sm font-medium">
-                  {t('chatFontFamily')}
-                </Label>
-                <Switch
-                  id="gv-font-family-enabled"
-                  checked={fontFamilyEnabled}
-                  onChange={(event) =>
-                    updateToggle(
-                      setFontFamilyEnabled,
-                      StorageKeys.CHAT_FONT_FAMILY_ENABLED,
-                      event.target.checked,
-                    )
-                  }
-                />
-              </div>
-              <Select
-                id="gv-font-family-select"
-                value={fontFamily}
-                disabled={!fontFamilyEnabled}
-                onChange={(e) => {
-                  const v = e.target.value as FontPreset;
-                  setFontFamily(v);
-                  void setSyncStorage({ [StorageKeys.CHAT_FONT_FAMILY]: v });
-                }}
-              >
-                <option value="default">{t('chatFontFamilyDefault')}</option>
-                <option value="claude">{t('chatFontFamilyClaude')}</option>
-                <option value="gemini">{t('chatFontFamilyGemini')}</option>
-                <option value="custom" disabled={!customFontName}>
-                  {t('chatFontFamilyCustom')}
-                  {customFontName
-                    ? ` — ${customFontName}`
-                    : ` (${t('chatFontFamilyNoneImported')})`}
-                </option>
-              </Select>
-              <p className="text-muted-foreground text-xs leading-snug">
-                {t('chatFontFamilyHint')}
-              </p>
-              <div className="flex items-center gap-2">
-                <input
-                  ref={customFontInputRef}
-                  type="file"
-                  accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void handleCustomFontPicked(file);
-                    // Reset so re-picking the same file fires onChange again
-                    // (file inputs swallow same-file picks otherwise).
-                    e.target.value = '';
-                  }}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!fontFamilyEnabled}
-                  onClick={() => customFontInputRef.current?.click()}
-                >
-                  {t('chatFontFamilyImport')}
-                </Button>
-                {customFontName ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={!fontFamilyEnabled}
-                    onClick={() => void handleCustomFontClear()}
-                  >
-                    {t('chatFontFamilyClear')}
-                  </Button>
-                ) : null}
-              </div>
-              {customFontStatus ? (
-                <p className="text-muted-foreground text-xs leading-snug">{customFontStatus}</p>
-              ) : null}
-            </div>
-          </Subsection>
-          <Subsection title={t('sidebar')}>
-            <ToggleRow
-              id="sidebar-auto-hide"
-              title={t('sidebarAutoHide')}
-              description={t('sidebarAutoHideHint')}
-              checked={sidebarAutoHide}
-              onChange={(value) =>
-                updateToggle(setSidebarAutoHide, StorageKeys.GV_SIDEBAR_AUTO_HIDE, value)
-              }
-            />
-            <ToggleRow
-              id="sidebar-full-hide"
-              title={t('sidebarFullHide')}
-              description={t('sidebarFullHideHint')}
-              checked={sidebarFullHide}
-              onChange={(value) =>
-                updateToggle(setSidebarFullHide, StorageKeys.GV_SIDEBAR_FULL_HIDE, value)
-              }
-            />
-          </Subsection>
-        </Section>
-
-        <Section title={t('inputOptions')}>
-          <ToggleRow
-            id="ctrl-enter"
-            title={t('ctrlEnterSend')}
-            description={t('ctrlEnterSendHint')}
-            checked={ctrlEnterSend}
-            onChange={(value) => updateToggle(setCtrlEnterSend, StorageKeys.CTRL_ENTER_SEND, value)}
-          />
-          <ToggleRow
-            id="safari-enter"
-            title={t('safariEnterFix')}
-            description={t('safariEnterFixHint')}
-            checked={safariEnterFix}
-            onChange={(value) =>
-              updateToggle(setSafariEnterFix, StorageKeys.SAFARI_ENTER_FIX, value)
-            }
-          />
-          <ToggleRow
-            id="input-collapse"
-            title={t('enableInputCollapse')}
-            description={t('enableInputCollapseHint')}
-            checked={inputCollapse}
-            onChange={(value) =>
-              updateToggle(setInputCollapse, StorageKeys.INPUT_COLLAPSE_ENABLED, value)
-            }
-          />
-          <ToggleRow
-            id="input-collapse-filled"
-            title={t('inputCollapseWhenNotEmpty')}
-            description={t('inputCollapseWhenNotEmptyHint')}
-            checked={inputCollapseWhenNotEmpty}
-            onChange={(value) =>
-              updateToggle(
-                setInputCollapseWhenNotEmpty,
-                StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
-                value,
-              )
-            }
-          />
-          <ToggleRow
-            id="vim-mode"
-            title={t('inputVimMode')}
-            description={t('inputVimModeHint')}
-            checked={vimMode}
-            onChange={(value) => updateToggle(setVimMode, StorageKeys.INPUT_VIM_MODE, value)}
-          />
-          <ToggleRow
-            id="draft-save"
-            title={t('draftAutoSave')}
-            description={t('draftAutoSaveHint')}
-            checked={draftAutoSave}
-            onChange={(value) => updateToggle(setDraftAutoSave, StorageKeys.DRAFT_AUTO_SAVE, value)}
-          />
-          <ToggleRow
-            id="prevent-scroll"
-            title={t('preventAutoScroll')}
-            description={t('preventAutoScrollHint')}
-            checked={preventAutoScroll}
-            onChange={(value) =>
-              updateToggle(setPreventAutoScroll, StorageKeys.PREVENT_AUTO_SCROLL_ENABLED, value)
-            }
-          />
-          <ToggleRow
-            id="quote-reply"
-            title={t('quoteReply')}
-            description={t('quoteReplyHint')}
-            checked={quoteReply}
-            onChange={(value) =>
-              updateToggle(setQuoteReply, StorageKeys.QUOTE_REPLY_ENABLED, value)
-            }
-          />
-        </Section>
-
-        <Section title={t('markdownOptions')}>
-          <ToggleRow
-            id="mermaid"
-            title={t('mermaidRendering')}
-            description={t('mermaidRenderingHint')}
-            checked={mermaidEnabled}
-            onChange={(value) =>
-              updateToggle(setMermaidEnabled, StorageKeys.MERMAID_ENABLED, value)
-            }
-          />
-          <div className="space-y-2 pt-2">
-            <Label className="text-sm font-medium">{t('formulaCopyFormat')}</Label>
-            <p className="text-muted-foreground text-xs">{t('formulaCopyFormatHint')}</p>
-            {formulaOptions.map(([value, label]) => (
-              <label key={value} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="formulaCopyFormat"
-                  value={value}
-                  checked={formulaCopyFormat === value}
-                  onChange={() => {
-                    setFormulaCopyFormat(value);
-                    void setSyncStorage({ gvFormulaCopyFormat: value });
-                  }}
-                />
-                <span>{label}</span>
-              </label>
-            ))}
-          </div>
-        </Section>
-
-        <Section title={t('appearanceOptions')}>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">{t('themes')}</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {THEMES.map((themeValue) => {
-                const themeConfig: Record<
-                  Theme,
-                  { name: string; hint: string; colors: string[] }
-                > = {
-                  default: {
-                    name: t('themeDefault'),
-                    hint: t('themeDefaultHint'),
-                    colors: ['#000000', '#1a1a1a', '#2d2d2d', '#404040'],
-                  },
-                  'gentler-dark': {
-                    name: t('themeGentlerDark'),
-                    hint: t('themeGentlerDarkHint'),
-                    colors: ['#1f1f1e', '#2c2c2a', '#3d3d3b', '#4a4a48'],
-                  },
-                  forest: {
-                    name: t('themeForest'),
-                    hint: t('themeForestHint'),
-                    colors: ['#1a2e1a', '#2d4a2d', '#3d5f3d', '#4a734a'],
-                  },
-                  crimson: {
-                    name: t('themeCrimson'),
-                    hint: t('themeCrimsonHint'),
-                    colors: ['#2e1a1a', '#4a2d2d', '#5f3d3d', '#734a4a'],
-                  },
-                  'midnight-blue': {
-                    name: t('themeMidnightBlue'),
-                    hint: t('themeMidnightBlueHint'),
-                    colors: ['#1a1e2e', '#2d324a', '#3d425f', '#4a5273'],
-                  },
-                  graphite: {
-                    name: t('themeGraphite'),
-                    hint: t('themeGraphiteHint'),
-                    colors: ['#1a1a1a', '#2d2d2d', '#3d3d3d', '#4a4a4a'],
-                  },
-                };
-                const config = themeConfig[themeValue];
-                const isSelected = theme === themeValue;
-                return (
-                  <label
-                    key={themeValue}
-                    className={`
-                      relative cursor-pointer rounded-lg border-2 p-3 transition-all duration-200
-                      ${isSelected 
-                        ? 'border-primary/50 shadow-[0_0_12px_rgba(var(--primary),0.3)]' 
-                        : 'border-border/60 hover:border-border hover:shadow-md'
-                      }
-                    `}
-                    htmlFor={`theme-${themeValue}`}
-                  >
-                    <input
-                      id={`theme-${themeValue}`}
-                      type="radio"
-                      name="theme"
-                      value={themeValue}
-                      checked={isSelected}
-                      onChange={() => {
-                        setTheme(themeValue);
-                        void setSyncStorage({ [StorageKeys.THEME]: themeValue });
-                      }}
-                      className="sr-only"
-                    />
-                    {isSelected && (
-                      <span className="absolute right-2 top-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
-                        {t('active')}
-                      </span>
-                    )}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{config.name}</span>
-                        <div className="flex gap-0.5">
-                          {config.colors.map((color, i) => (
-                            <div
-                              key={i}
-                              className="h-2.5 w-2.5 rounded-full border border-border/50"
-                              style={{ backgroundColor: color }}
+      <div className="flex flex-col md:flex-row">
+        <CategoryNav
+          selectedCategory={selectedCategory}
+          onCategoryChange={handleCategoryChange}
+        />
+        <div className="hidden md:block border-border/40 border-l flex-shrink-0" />
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="animate-in fade-in slide-in-from-right-4 duration-150 ease-out">
+            {selectedCategory === 'general' && (
+              <div className="space-y-6">
+                <Section title={t('appearanceOptions')}>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">{t('themes')}</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {THEMES.map((themeValue) => {
+                        const themeConfig: Record<
+                          Theme,
+                          { name: string; hint: string; colors: string[] }
+                        > = {
+                          default: {
+                            name: t('themeDefault'),
+                            hint: t('themeDefaultHint'),
+                            colors: ['#000000', '#1a1a1a', '#2d2d2d', '#404040'],
+                          },
+                          'gentler-dark': {
+                            name: t('themeGentlerDark'),
+                            hint: t('themeGentlerDarkHint'),
+                            colors: ['#1f1f1e', '#2c2c2a', '#3d3d3b', '#4a4a48'],
+                          },
+                          forest: {
+                            name: t('themeForest'),
+                            hint: t('themeForestHint'),
+                            colors: ['#1a2e1a', '#2d4a2d', '#3d5f3d', '#4a734a'],
+                          },
+                          crimson: {
+                            name: t('themeCrimson'),
+                            hint: t('themeCrimsonHint'),
+                            colors: ['#2e1a1a', '#4a2d2d', '#5f3d3d', '#734a4a'],
+                          },
+                          'midnight-blue': {
+                            name: t('themeMidnightBlue'),
+                            hint: t('themeMidnightBlueHint'),
+                            colors: ['#1a1e2e', '#2d324a', '#3d425f', '#4a5273'],
+                          },
+                          graphite: {
+                            name: t('themeGraphite'),
+                            hint: t('themeGraphiteHint'),
+                            colors: ['#1a1a1a', '#2d2d2d', '#3d3d3d', '#4a4a4a'],
+                          },
+                        };
+                        const config = themeConfig[themeValue];
+                        const isSelected = theme === themeValue;
+                        return (
+                          <label
+                            key={themeValue}
+                            className={`
+                              relative cursor-pointer rounded-lg border-2 p-3 transition-all duration-200
+                              ${isSelected 
+                                ? 'border-primary/50 shadow-[0_0_12px_rgba(var(--primary),0.3)]' 
+                                : 'border-border/60 hover:border-border hover:shadow-md'
+                              }
+                            `}
+                            htmlFor={`theme-${themeValue}`}
+                          >
+                            <input
+                              id={`theme-${themeValue}`}
+                              type="radio"
+                              name="theme"
+                              value={themeValue}
+                              checked={isSelected}
+                              onChange={() => {
+                                setTheme(themeValue);
+                                void setSyncStorage({ [StorageKeys.THEME]: themeValue });
+                              }}
+                              className="sr-only"
                             />
-                          ))}
+                            {isSelected && (
+                              <span className="absolute right-2 top-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                                {t('active')}
+                              </span>
+                            )}
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">{config.name}</span>
+                                <div className="flex gap-0.5">
+                                  {config.colors.map((color, i) => (
+                                    <div
+                                      key={i}
+                                      className="h-2.5 w-2.5 rounded-full border border-border/50"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">{config.hint}</p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'timeline' && (
+              <div className="space-y-6">
+                <Section title={t('timelineOptions')}>
+                  <ToggleRow
+                    id="timeline-enabled"
+                    title={t('enableTimeline')}
+                    description={t('enableTimelineDescription')}
+                    checked={timelineEnabled}
+                    onChange={(value) =>
+                      updateToggle(setTimelineEnabled, StorageKeys.TIMELINE_ENABLED, value)
+                    }
+                  />
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">{t('navigationStyle')}</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={timelineMode === 'flow' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() =>
+                          updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'flow')
+                        }
+                      >
+                        {t('flow')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={timelineMode === 'jump' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() =>
+                          updateToggle<ScrollMode>(setTimelineMode, StorageKeys.TIMELINE_SCROLL_MODE, 'jump')
+                        }
+                      >
+                        {t('jump')}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">{t('features')}</Label>
+                    <div className="space-y-3">
+                      <ToggleRow
+                        id="timeline-preview"
+                        title={t('pinTimelinePreview')}
+                        description={t('pinTimelinePreviewHint')}
+                        checked={timelinePreviewPinned}
+                        onChange={(value) =>
+                          updateToggle(setTimelinePreviewPinned, StorageKeys.TIMELINE_PREVIEW_PINNED, value)
+                        }
+                      />
+                      <ToggleRow
+                        id="timeline-level"
+                        title={t('enableMarkerLevel')}
+                        description={t('enableMarkerLevelHint')}
+                        checked={timelineMarkerLevel}
+                        onChange={(value) =>
+                          updateToggle(setTimelineMarkerLevel, StorageKeys.TIMELINE_MARKER_LEVEL, value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <CollapsibleSection title={t('advanced')} defaultOpen={false}>
+                    <ToggleRow
+                      id="timeline-hidden"
+                      title={t('hideOuterContainer')}
+                      checked={timelineHidden}
+                      onChange={(value) =>
+                        updateToggle(setTimelineHidden, StorageKeys.TIMELINE_HIDE_CONTAINER, value)
+                      }
+                    />
+                    <ToggleRow
+                      id="timeline-draggable"
+                      title={t('draggableTimeline')}
+                      checked={timelineDraggable}
+                      onChange={(value) =>
+                        updateToggle(setTimelineDraggable, StorageKeys.TIMELINE_DRAGGABLE, value)
+                      }
+                    />
+                    <ToggleRow
+                      id="fork-enabled"
+                      title={t('enableForkFeature')}
+                      description={t('enableForkFeatureHint')}
+                      checked={forkEnabled}
+                      onChange={(value) => updateToggle(setForkEnabled, StorageKeys.FORK_ENABLED, value)}
+                    />
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void setSyncStorage({ [StorageKeys.TIMELINE_POSITION]: null })}
+                      >
+                        {t('resetTimelinePosition')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowStarredHistory(true)}
+                      >
+                        {t('viewStarredHistory')}
+                      </Button>
+                    </div>
+                  </CollapsibleSection>
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'folders' && (
+              <div className="space-y-6">
+                <Section title={t('folder_title')}>
+                  <ToggleRow
+                    id="folder-enabled"
+                    title={t('enableFolders')}
+                    checked={folderEnabled}
+                    onChange={(value) => updateToggle(setFolderEnabled, StorageKeys.FOLDER_ENABLED, value)}
+                  />
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">{t('behavior')}</Label>
+                    <div className="space-y-3">
+                      <ToggleRow
+                        id="folder-floating"
+                        title={t('enableFloatingFolderPanel')}
+                        checked={folderFloating}
+                        onChange={(value) =>
+                          updateToggle(setFolderFloating, StorageKeys.FOLDER_FLOATING_MODE_ENABLED, value)
+                        }
+                      />
+                      <ToggleRow
+                        id="folder-hide-archived"
+                        title={t('hideArchivedConversations')}
+                        checked={hideArchived}
+                        onChange={(value) =>
+                          updateToggle(setHideArchived, StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS, value)
+                        }
+                      />
+                      <ToggleRow
+                        id="folder-project"
+                        title={t('folderAsProject_enable')}
+                        description={t('folderAsProject_description')}
+                        checked={folderProjectEnabled}
+                        onChange={(value) =>
+                          updateToggle(setFolderProjectEnabled, StorageKeys.FOLDER_PROJECT_ENABLED, value)
+                        }
+                      />
+                      <ToggleRow
+                        id="folder-below-projects"
+                        title={t('folderBelowProjects')}
+                        description={t('folderBelowProjects_description')}
+                        checked={folderBelowProjects}
+                        onChange={(value) =>
+                          updateToggle(setFolderBelowProjects, StorageKeys.GV_FOLDER_BELOW_PROJECTS, value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">{t('appearance')}</Label>
+                    <div className="space-y-3">
+                      <WidthSlider
+                        label={t('folderSpacing')}
+                        value={folderSpacing}
+                        min={FOLDER_SPACING.min}
+                        max={FOLDER_SPACING.max}
+                        step={1}
+                        narrowLabel={t('folderSpacingCompact')}
+                        wideLabel={t('folderSpacingSpacious')}
+                        onChange={(value) => setFolderSpacing(value)}
+                        onChangeComplete={(value) =>
+                          void setSyncStorage({ [StorageKeys.GV_FOLDER_SPACING]: value })
+                        }
+                      />
+                      <WidthSlider
+                        label={t('folderTreeIndent')}
+                        value={folderTreeIndent}
+                        min={FOLDER_TREE_INDENT.min}
+                        max={FOLDER_TREE_INDENT.max}
+                        step={1}
+                        narrowLabel={t('folderTreeIndentCompact')}
+                        wideLabel={t('folderTreeIndentSpacious')}
+                        onChange={(value) => setFolderTreeIndent(value)}
+                        onChangeComplete={(value) =>
+                          void setSyncStorage({ [StorageKeys.GV_FOLDER_TREE_INDENT]: value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'layout' && (
+              <div className="space-y-6">
+                <Section title={t('layoutOptions')}>
+                  <Subsection title={t('general')}>
+                    <WidthSlider
+                      label={t('chatWidth')}
+                      value={chatWidth}
+                      min={CHAT_PERCENT.min}
+                      max={CHAT_PERCENT.max}
+                      step={1}
+                      narrowLabel={t('chatWidthNarrow')}
+                      wideLabel={t('chatWidthWide')}
+                      onChange={setChatWidth}
+                      onChangeComplete={(value) => void setSyncStorage({ [StorageKeys.CHAT_WIDTH]: value })}
+                      enabled={chatWidthEnabled}
+                      onToggle={(value) =>
+                        updateToggle(setChatWidthEnabled, StorageKeys.CHAT_WIDTH_ENABLED, value)
+                      }
+                    />
+                    <WidthSlider
+                      label={t('editInputWidth')}
+                      value={editInputWidth}
+                      min={EDIT_PERCENT.min}
+                      max={EDIT_PERCENT.max}
+                      step={1}
+                      narrowLabel={t('chatWidthNarrow')}
+                      wideLabel={t('chatWidthWide')}
+                      onChange={setEditInputWidth}
+                      onChangeComplete={(value) =>
+                        void setSyncStorage({ [StorageKeys.EDIT_INPUT_WIDTH]: value })
+                      }
+                      enabled={editInputWidthEnabled}
+                      onToggle={(value) =>
+                        updateToggle(setEditInputWidthEnabled, StorageKeys.EDIT_INPUT_WIDTH_ENABLED, value)
+                      }
+                    />
+                    <WidthSlider
+                      label={t('sidebarWidth')}
+                      value={sidebarWidth}
+                      min={SIDEBAR_PX.min}
+                      max={SIDEBAR_PX.max}
+                      step={1}
+                      valueFormatter={(value) => `${value}px`}
+                      narrowLabel={t('sidebarWidthNarrow')}
+                      wideLabel={t('sidebarWidthWide')}
+                      onChange={setSidebarWidth}
+                      onChangeComplete={(value) =>
+                        void setSyncStorage({ [StorageKeys.SIDEBAR_WIDTH]: value })
+                      }
+                    />
+                  </Subsection>
+                  <Subsection title={t('text')}>
+                    <WidthSlider
+                      label={t('chatFontSize')}
+                      value={chatFontSize}
+                      min={CHAT_FONT_SIZE.min}
+                      max={CHAT_FONT_SIZE.max}
+                      step={1}
+                      narrowLabel={t('chatFontSizeSmall')}
+                      wideLabel={t('chatFontSizeLarge')}
+                      onChange={setChatFontSize}
+                      onChangeComplete={(value) =>
+                        void setSyncStorage({ [StorageKeys.CHAT_FONT_SIZE]: value })
+                      }
+                      enabled={chatFontSizeEnabled}
+                      onToggle={(value) =>
+                        updateToggle(setChatFontSizeEnabled, StorageKeys.CHAT_FONT_SIZE_ENABLED, value)
+                      }
+                    />
+                    <WidthSlider
+                      label={t('codeFontSize')}
+                      value={codeFontSize}
+                      min={CODE_FONT_SIZE.min}
+                      max={CODE_FONT_SIZE.max}
+                      step={1}
+                      narrowLabel={t('chatFontSizeSmall')}
+                      wideLabel={t('chatFontSizeLarge')}
+                      onChange={setCodeFontSize}
+                      onChangeComplete={(value) =>
+                        void setSyncStorage({ [StorageKeys.CODE_FONT_SIZE]: value })
+                      }
+                      enabled={codeFontSizeEnabled}
+                      onToggle={(value) =>
+                        updateToggle(setCodeFontSizeEnabled, StorageKeys.CODE_FONT_SIZE_ENABLED, value)
+                      }
+                    />
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="gv-font-family-select" className="text-sm font-medium">
+                          {t('chatFontFamily')}
+                        </Label>
+                        <Switch
+                          id="gv-font-family-enabled"
+                          checked={fontFamilyEnabled}
+                          onChange={(event) =>
+                            updateToggle(
+                              setFontFamilyEnabled,
+                              StorageKeys.CHAT_FONT_FAMILY_ENABLED,
+                              event.target.checked,
+                            )
+                          }
+                        />
+                      </div>
+                      <Select
+                        id="gv-font-family-select"
+                        value={fontFamily}
+                        disabled={!fontFamilyEnabled}
+                        onChange={(e) => {
+                          const v = e.target.value as FontPreset;
+                          setFontFamily(v);
+                          void setSyncStorage({ [StorageKeys.CHAT_FONT_FAMILY]: v });
+                        }}
+                      >
+                        <option value="default">{t('chatFontFamilyDefault')}</option>
+                        <option value="claude">{t('chatFontFamilyClaude')}</option>
+                        <option value="gemini">{t('chatFontFamilyGemini')}</option>
+                        <option value="custom" disabled={!customFontName}>
+                          {t('chatFontFamilyCustom')}
+                          {customFontName
+                            ? ` — ${customFontName}`
+                            : ` (${t('chatFontFamilyNoneImported')})`}
+                        </option>
+                      </Select>
+                      <p className="text-muted-foreground text-xs leading-snug">
+                        {t('chatFontFamilyHint')}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={customFontInputRef}
+                          type="file"
+                          accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void handleCustomFontPicked(file);
+
+                            e.target.value = '';
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!fontFamilyEnabled}
+                          onClick={() => customFontInputRef.current?.click()}
+                        >
+                          {t('chatFontFamilyImport')}
+                        </Button>
+                        {customFontName ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={!fontFamilyEnabled}
+                            onClick={() => void handleCustomFontClear()}
+                          >
+                            {t('chatFontFamilyClear')}
+                          </Button>
+                        ) : null}
+                      </div>
+                      {customFontStatus ? (
+                        <p className="text-muted-foreground text-xs leading-snug">{customFontStatus}</p>
+                      ) : null}
+                    </div>
+                  </Subsection>
+                  <Subsection title={t('sidebar')}>
+                    <ToggleRow
+                      id="sidebar-auto-hide"
+                      title={t('sidebarAutoHide')}
+                      description={t('sidebarAutoHideHint')}
+                      checked={sidebarAutoHide}
+                      onChange={(value) =>
+                        updateToggle(setSidebarAutoHide, StorageKeys.GV_SIDEBAR_AUTO_HIDE, value)
+                      }
+                    />
+                    <ToggleRow
+                      id="sidebar-full-hide"
+                      title={t('sidebarFullHide')}
+                      description={t('sidebarFullHideHint')}
+                      checked={sidebarFullHide}
+                      onChange={(value) =>
+                        updateToggle(setSidebarFullHide, StorageKeys.GV_SIDEBAR_FULL_HIDE, value)
+                      }
+                    />
+                  </Subsection>
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'input' && (
+              <div className="space-y-6">
+                <Section title={t('inputOptions')}>
+                  <ToggleRow
+                    id="ctrl-enter"
+                    title={t('ctrlEnterSend')}
+                    description={t('ctrlEnterSendHint')}
+                    checked={ctrlEnterSend}
+                    onChange={(value) => updateToggle(setCtrlEnterSend, StorageKeys.CTRL_ENTER_SEND, value)}
+                  />
+                  <ToggleRow
+                    id="safari-enter"
+                    title={t('safariEnterFix')}
+                    description={t('safariEnterFixHint')}
+                    checked={safariEnterFix}
+                    onChange={(value) =>
+                      updateToggle(setSafariEnterFix, StorageKeys.SAFARI_ENTER_FIX, value)
+                    }
+                  />
+                  <ToggleRow
+                    id="input-collapse"
+                    title={t('enableInputCollapse')}
+                    description={t('enableInputCollapseHint')}
+                    checked={inputCollapse}
+                    onChange={(value) =>
+                      updateToggle(setInputCollapse, StorageKeys.INPUT_COLLAPSE_ENABLED, value)
+                    }
+                  />
+                  <ToggleRow
+                    id="input-collapse-filled"
+                    title={t('inputCollapseWhenNotEmpty')}
+                    description={t('inputCollapseWhenNotEmptyHint')}
+                    checked={inputCollapseWhenNotEmpty}
+                    onChange={(value) =>
+                      updateToggle(
+                        setInputCollapseWhenNotEmpty,
+                        StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
+                        value,
+                      )
+                    }
+                  />
+                  <ToggleRow
+                    id="vim-mode"
+                    title={t('inputVimMode')}
+                    description={t('inputVimModeHint')}
+                    checked={vimMode}
+                    onChange={(value) => updateToggle(setVimMode, StorageKeys.INPUT_VIM_MODE, value)}
+                  />
+                  <ToggleRow
+                    id="draft-save"
+                    title={t('draftAutoSave')}
+                    description={t('draftAutoSaveHint')}
+                    checked={draftAutoSave}
+                    onChange={(value) => updateToggle(setDraftAutoSave, StorageKeys.DRAFT_AUTO_SAVE, value)}
+                  />
+                  <ToggleRow
+                    id="prevent-scroll"
+                    title={t('preventAutoScroll')}
+                    description={t('preventAutoScrollHint')}
+                    checked={preventAutoScroll}
+                    onChange={(value) =>
+                      updateToggle(setPreventAutoScroll, StorageKeys.PREVENT_AUTO_SCROLL_ENABLED, value)
+                    }
+                  />
+                  <ToggleRow
+                    id="quote-reply"
+                    title={t('quoteReply')}
+                    description={t('quoteReplyHint')}
+                    checked={quoteReply}
+                    onChange={(value) =>
+                      updateToggle(setQuoteReply, StorageKeys.QUOTE_REPLY_ENABLED, value)
+                    }
+                  />
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'markdown' && (
+              <div className="space-y-6">
+                <Section title={t('markdownOptions')}>
+                  <ToggleRow
+                    id="mermaid"
+                    title={t('mermaidRendering')}
+                    description={t('mermaidRenderingHint')}
+                    checked={mermaidEnabled}
+                    onChange={(value) =>
+                      updateToggle(setMermaidEnabled, StorageKeys.MERMAID_ENABLED, value)
+                    }
+                  />
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-sm font-medium">{t('formulaCopyFormat')}</Label>
+                    <p className="text-muted-foreground text-xs">{t('formulaCopyFormatHint')}</p>
+                    {formulaOptions.map(([value, label]) => (
+                      <label key={value} className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="formulaCopyFormat"
+                          value={value}
+                          checked={formulaCopyFormat === value}
+                          onChange={() => {
+                            setFormulaCopyFormat(value);
+                            void setSyncStorage({ gvFormulaCopyFormat: value });
+                          }}
+                        />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'export' && (
+              <div className="space-y-6">
+                <Section title={t('singleConvExportOptions')}>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">{t('singleConvExportFormat')}</Label>
+                    
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatMarkdown')}</h4>
+                        <div className="space-y-1 pl-2">
+                          {singleConvExportOptions
+                            .filter(([value]) => value === 'markdown' || value === 'markdown-simple')
+                            .map(([value, label, _description]) => (
+                              <label
+                                key={value}
+                                className={`
+                                  flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
+                                  ${singleConvExportFormat === value 
+                                    ? 'border-primary/50 bg-primary/5' 
+                                    : 'border-border/60 hover:border-border hover:bg-accent/50'
+                                  }
+                                `}
+                                htmlFor={`single-conv-export-${value}`}
+                              >
+                                <input
+                                  id={`single-conv-export-${value}`}
+                                  type="radio"
+                                  name="singleConvExportFormat"
+                                  value={value}
+                                  checked={singleConvExportFormat === value}
+                                  onChange={() => {
+                                    setSingleConvExportFormat(value);
+                                    void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
+                                  }}
+                                  className="sr-only"
+                                />
+                                <span className="text-sm">{label}</span>
+                              </label>
+                            ))}
                         </div>
                       </div>
-                      <p className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">{config.hint}</p>
+
+                      <div className="space-y-1">
+                        <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatJson')}</h4>
+                        <div className="space-y-1 pl-2">
+                          {singleConvExportOptions
+                            .filter(([value]) => value === 'json' || value === 'json-simple')
+                            .map(([value, label, _description]) => (
+                              <label
+                                key={value}
+                                className={`
+                                  flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
+                                  ${singleConvExportFormat === value 
+                                    ? 'border-primary/50 bg-primary/5' 
+                                    : 'border-border/60 hover:border-border hover:bg-accent/50'
+                                  }
+                                `}
+                                htmlFor={`single-conv-export-${value}`}
+                              >
+                                <input
+                                  id={`single-conv-export-${value}`}
+                                  type="radio"
+                                  name="singleConvExportFormat"
+                                  value={value}
+                                  checked={singleConvExportFormat === value}
+                                  onChange={() => {
+                                    setSingleConvExportFormat(value);
+                                    void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
+                                  }}
+                                  className="sr-only"
+                                />
+                                <span className="text-sm">{label}</span>
+                              </label>
+                            ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatHtml')}</h4>
+                        <div className="space-y-1 pl-2">
+                          {singleConvExportOptions
+                            .filter(([value]) => value === 'html')
+                            .map(([value, label, _description]) => (
+                              <label
+                                key={value}
+                                className={`
+                                  flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
+                                  ${singleConvExportFormat === value 
+                                    ? 'border-primary/50 bg-primary/5' 
+                                    : 'border-border/60 hover:border-border hover:bg-accent/50'
+                                  }
+                                `}
+                                htmlFor={`single-conv-export-${value}`}
+                              >
+                                <input
+                                  id={`single-conv-export-${value}`}
+                                  type="radio"
+                                  name="singleConvExportFormat"
+                                  value={value}
+                                  checked={singleConvExportFormat === value}
+                                  onChange={() => {
+                                    setSingleConvExportFormat(value);
+                                    void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
+                                  }}
+                                  className="sr-only"
+                                />
+                                <span className="text-sm">{label}</span>
+                              </label>
+                            ))}
+                        </div>
+                      </div>
                     </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        </Section>
 
-        <Section title={t('singleConvExportOptions')}>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">{t('singleConvExportFormat')}</Label>
-            
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatMarkdown')}</h4>
-                <div className="space-y-1 pl-2">
-                  {singleConvExportOptions
-                    .filter(([value]) => value === 'markdown' || value === 'markdown-simple')
-                    .map(([value, label, _description]) => (
-                      <label
-                        key={value}
-                        className={`
-                          flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
-                          ${singleConvExportFormat === value 
-                            ? 'border-primary/50 bg-primary/5' 
-                            : 'border-border/60 hover:border-border hover:bg-accent/50'
-                          }
-                        `}
-                        htmlFor={`single-conv-export-${value}`}
-                      >
-                        <input
-                          id={`single-conv-export-${value}`}
-                          type="radio"
-                          name="singleConvExportFormat"
-                          value={value}
-                          checked={singleConvExportFormat === value}
-                          onChange={() => {
-                            setSingleConvExportFormat(value);
-                            void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
-                          }}
-                          className="sr-only"
-                        />
-                        <span className="text-sm">{label}</span>
-                      </label>
-                    ))}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatJson')}</h4>
-                <div className="space-y-1 pl-2">
-                  {singleConvExportOptions
-                    .filter(([value]) => value === 'json' || value === 'json-simple')
-                    .map(([value, label, _description]) => (
-                      <label
-                        key={value}
-                        className={`
-                          flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
-                          ${singleConvExportFormat === value 
-                            ? 'border-primary/50 bg-primary/5' 
-                            : 'border-border/60 hover:border-border hover:bg-accent/50'
-                          }
-                        `}
-                        htmlFor={`single-conv-export-${value}`}
-                      >
-                        <input
-                          id={`single-conv-export-${value}`}
-                          type="radio"
-                          name="singleConvExportFormat"
-                          value={value}
-                          checked={singleConvExportFormat === value}
-                          onChange={() => {
-                            setSingleConvExportFormat(value);
-                            void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
-                          }}
-                          className="sr-only"
-                        />
-                        <span className="text-sm">{label}</span>
-                      </label>
-                    ))}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{t('formatHtml')}</h4>
-                <div className="space-y-1 pl-2">
-                  {singleConvExportOptions
-                    .filter(([value]) => value === 'html')
-                    .map(([value, label, _description]) => (
-                      <label
-                        key={value}
-                        className={`
-                          flex cursor-pointer items-center gap-2 rounded-md border-2 p-2 text-sm transition-all duration-200
-                          ${singleConvExportFormat === value 
-                            ? 'border-primary/50 bg-primary/5' 
-                            : 'border-border/60 hover:border-border hover:bg-accent/50'
-                          }
-                        `}
-                        htmlFor={`single-conv-export-${value}`}
-                      >
-                        <input
-                          id={`single-conv-export-${value}`}
-                          type="radio"
-                          name="singleConvExportFormat"
-                          value={value}
-                          checked={singleConvExportFormat === value}
-                          onChange={() => {
-                            setSingleConvExportFormat(value);
-                            void setSyncStorage({ [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: value });
-                          }}
-                          className="sr-only"
-                        />
-                        <span className="text-sm">{label}</span>
-                      </label>
-                    ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-border/40 border-t pt-2">
-              <p className="text-muted-foreground text-xs">
-                {singleConvExportOptions.find(([value]) => value === singleConvExportFormat)?.[2]}
-              </p>
-            </div>
-          </div>
-        </Section>
-
-        <Section title={t('promptManagerOptions')}>
-          <Subsection title={t('general')}>
-            <ToggleRow
-              id="prompt-hidden"
-              title={t('hidePromptManager')}
-              description={t('hidePromptManagerHint')}
-              checked={promptHidden}
-              onChange={(value) =>
-                updateToggle(setPromptHidden, StorageKeys.HIDE_PROMPT_MANAGER, value)
-              }
-            />
-          </Subsection>
-          <Subsection title={t('interaction')}>
-            <ToggleRow
-              id="prompt-insert"
-              title={t('promptInsertOnClick')}
-              description={t('promptInsertOnClickHint')}
-              checked={promptInsertOnClick}
-              onChange={(value) =>
-                updateToggle(setPromptInsertOnClick, StorageKeys.PROMPT_INSERT_ON_CLICK, value)
-              }
-            />
-          </Subsection>
-          <Subsection title={t('display')}>
-            <div className="flex rounded-md border-2 border-border/60 p-1">
-              <button
-                type="button"
-                className={`
-                  flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all
-                  ${promptViewMode === 'comfortable' 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }
-                `}
-                onClick={() =>
-                  updateToggle<PromptViewMode>(
-                    setPromptViewMode,
-                    StorageKeys.PROMPT_VIEW_MODE,
-                    'comfortable',
-                  )
-                }
-              >
-                {t('pm_view_comfortable')}
-              </button>
-              <button
-                type="button"
-                className={`
-                  flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all
-                  ${promptViewMode === 'compact' 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }
-                `}
-                onClick={() =>
-                  updateToggle<PromptViewMode>(
-                    setPromptViewMode,
-                    StorageKeys.PROMPT_VIEW_MODE,
-                    'compact',
-                  )
-                }
-              >
-                {t('pm_view_compact')}
-              </button>
-            </div>
-          </Subsection>
-          <Subsection title={t('websites')}>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t('customWebsites')}</Label>
-              <div className="flex gap-2">
-                <input
-                  value={customWebsiteInput}
-                  onChange={(event) => setCustomWebsiteInput(event.target.value)}
-                  placeholder="example.com"
-                  className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
-                />
-                <Button type="button" size="sm" onClick={() => void addCustomWebsite()}>
-                  {t('pm_add')}
-                </Button>
-              </div>
-              {customWebsiteNotice ? (
-                <p className="text-muted-foreground text-xs">{customWebsiteNotice}</p>
-              ) : null}
-              <p className="text-muted-foreground text-xs">{t('customWebsitesHint')}</p>
-              <div className="space-y-1">
-                {customWebsites.map((domain) => (
-                  <div
-                    key={domain}
-                    className="flex items-center justify-between rounded-md border px-2 py-1 text-sm"
-                  >
-                    <span>{domain}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => void removeCustomWebsite(domain)}
-                    >
-                      {t('pm_delete')}
-                    </Button>
+                    <div className="border-border/40 border-t pt-2">
+                      <p className="text-muted-foreground text-xs">
+                        {singleConvExportOptions.find(([value]) => value === singleConvExportFormat)?.[2]}
+                      </p>
+                    </div>
                   </div>
-                ))}
+                </Section>
               </div>
-            </div>
-          </Subsection>
-        </Section>
+            )}
+            {selectedCategory === 'promptManager' && (
+              <div className="space-y-6">
+                <Section title={t('promptManagerOptions')}>
+                  <Subsection title={t('general')}>
+                    <ToggleRow
+                      id="prompt-hidden"
+                      title={t('hidePromptManager')}
+                      description={t('hidePromptManagerHint')}
+                      checked={promptHidden}
+                      onChange={(value) =>
+                        updateToggle(setPromptHidden, StorageKeys.HIDE_PROMPT_MANAGER, value)
+                      }
+                    />
+                  </Subsection>
+                  <Subsection title={t('interaction')}>
+                    <ToggleRow
+                      id="prompt-insert"
+                      title={t('promptInsertOnClick')}
+                      description={t('promptInsertOnClickHint')}
+                      checked={promptInsertOnClick}
+                      onChange={(value) =>
+                        updateToggle(setPromptInsertOnClick, StorageKeys.PROMPT_INSERT_ON_CLICK, value)
+                      }
+                    />
+                  </Subsection>
+                  <Subsection title={t('display')}>
+                    <div className="flex rounded-md border-2 border-border/60 p-1">
+                      <button
+                        type="button"
+                        className={`
+                          flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all
+                          ${promptViewMode === 'comfortable' 
+                            ? 'bg-primary text-primary-foreground shadow-sm' 
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                          }
+                        `}
+                        onClick={() =>
+                          updateToggle<PromptViewMode>(
+                            setPromptViewMode,
+                            StorageKeys.PROMPT_VIEW_MODE,
+                            'comfortable',
+                          )
+                        }
+                      >
+                        {t('pm_view_comfortable')}
+                      </button>
+                      <button
+                        type="button"
+                        className={`
+                          flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all
+                          ${promptViewMode === 'compact' 
+                            ? 'bg-primary text-primary-foreground shadow-sm' 
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                          }
+                        `}
+                        onClick={() =>
+                          updateToggle<PromptViewMode>(
+                            setPromptViewMode,
+                            StorageKeys.PROMPT_VIEW_MODE,
+                            'compact',
+                          )
+                        }
+                      >
+                        {t('pm_view_compact')}
+                      </button>
+                    </div>
+                  </Subsection>
+                  <Subsection title={t('websites')}>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">{t('customWebsites')}</Label>
+                      <div className="flex gap-2">
+                        <input
+                          value={customWebsiteInput}
+                          onChange={(event) => setCustomWebsiteInput(event.target.value)}
+                          placeholder="example.com"
+                          className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
+                        />
+                        <Button type="button" size="sm" onClick={() => void addCustomWebsite()}>
+                          {t('pm_add')}
+                        </Button>
+                      </div>
+                      {customWebsiteNotice ? (
+                        <p className="text-muted-foreground text-xs">{customWebsiteNotice}</p>
+                      ) : null}
+                      <p className="text-muted-foreground text-xs">{t('customWebsitesHint')}</p>
+                      <div className="space-y-1">
+                        {customWebsites.map((domain) => (
+                          <div
+                            key={domain}
+                            className="flex items-center justify-between rounded-md border px-2 py-1 text-sm"
+                          >
+                            <span>{domain}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => void removeCustomWebsite(domain)}
+                            >
+                              {t('pm_delete')}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Subsection>
+                </Section>
+              </div>
+            )}
+            {selectedCategory === 'about' && (
+              <div className="space-y-6">
+                <Section title={t('about')}>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{t('extensionVersion')}</span>
+                      <span className="text-muted-foreground text-sm">{extVersion || 'N/A'}</span>
+                    </div>
+                    <a
+                      href={PROJECT_REPOSITORY_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary hover:underline text-sm"
+                    >
+                      {t('starProject')}
+                    </a>
+                  </div>
+                </Section>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="text-muted-foreground border-border/50 flex items-center justify-center border-t px-5 py-3 text-center text-xs">
