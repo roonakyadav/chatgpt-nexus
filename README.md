@@ -2,7 +2,7 @@
 
 ChatGPT nexus is a local browser extension that adapts a nexus-style chat workflow to ChatGPT.
 
-This repository contains the source code for a standalone Chrome/Edge extension intended for local development and maintenance.
+This repository contains the source code for a standalone Chrome/Edge extension intended for local development and maintenance
 
 
 ## Features
