@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { StorageKeys } from '@/core/types/common';
 import {
   hasValidExtensionContext,
@@ -35,6 +36,18 @@ import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTempChatExit } from './tempChatExit/index';
 import { startTimeline } from './timeline/index';
 import { startUserLatex } from './userLatex/index';
+
+// Setup message listener for lazy loading visual effects
+browser.runtime.onMessage.addListener((message: unknown) => {
+  if (typeof message === 'object' && message !== null && 'type' in message && message.type === 'INITIALIZE_VISUAL_EFFECTS') {
+    import('./visualEffects/index').then(({ initializeVisualEffects }) => {
+      void initializeVisualEffects();
+    }).catch((error) => {
+      console.error('[Content] Failed to initialize visual effects:', error);
+    });
+  }
+  return false;
+});
 
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault();

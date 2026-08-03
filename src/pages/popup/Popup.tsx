@@ -847,9 +847,19 @@ export default function Popup() {
                               name="visualEffect"
                               value={effectValue}
                               checked={isSelected}
-                              onChange={() => {
+                              onChange={async () => {
                                 setVisualEffect(effectValue as VisualEffect);
-                                void setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effectValue });
+                                await setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effectValue });
+                                // Notify content script to initialize visual effects
+                                if (effectValue === 'sakura') {
+                                  await browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+                                    if (tabs[0]?.id) {
+                                      void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {
+                                        // Content script might not be loaded yet, that's okay
+                                      });
+                                    }
+                                  });
+                                }
                               }}
                               className="sr-only"
                             />
