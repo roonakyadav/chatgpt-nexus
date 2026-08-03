@@ -1138,13 +1138,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
             padding: 8px 16px;
             font-size: 13px;
             font-weight: 500;
-            background: currentColor;
-            color: var(--gv-pm-bg, #fff);
+            background: var(--gv-pm-accent, #10a37f);
+            color: #fff;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: opacity 150ms ease;
+            transition: opacity 150ms ease, background-color 150ms ease;
           `;
+          primaryBtn.addEventListener('mouseenter', () => {
+            primaryBtn.style.backgroundColor = 'var(--gv-pm-accent-hover, #0d8a6a)';
+          });
+          primaryBtn.addEventListener('mouseleave', () => {
+            primaryBtn.style.backgroundColor = 'var(--gv-pm-accent, #10a37f)';
+          });
         }
         
         const secondaryBtn = empty.querySelector('.gv-pm-empty-secondary-btn') as HTMLButtonElement;
