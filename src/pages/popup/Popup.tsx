@@ -6,6 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
 import { StorageKeys, type Theme, THEMES } from '@/core/types/common';
+import { type VisualEffect, VISUAL_EFFECT_CONFIGS } from '@/core/visualEffects';
 
 type PopupCategory =
   | 'general'
@@ -320,6 +321,7 @@ export default function Popup() {
   );
   const [mermaidEnabled, setMermaidEnabled] = useState(true);
   const [theme, setTheme] = useState<Theme>('default');
+  const [visualEffect, setVisualEffect] = useState<VisualEffect>('off');
   const [promptHidden, setPromptHidden] = useState(false);
   const [promptInsertOnClick, setPromptInsertOnClick] = useState(false);
   const [promptViewMode, setPromptViewMode] = useState<PromptViewMode>('comfortable');
@@ -485,6 +487,7 @@ export default function Popup() {
         [StorageKeys.PROMPT_VIEW_MODE]: 'comfortable',
         [StorageKeys.PROMPT_CUSTOM_WEBSITES]: [],
         [StorageKeys.SINGLE_CONV_EXPORT_FORMAT]: DEFAULT_SINGLE_CONV_EXPORT_FORMAT,
+        [StorageKeys.GV_VISUAL_EFFECT]: 'off',
       })
       .then((result) => {
         setTimelineEnabled(result[StorageKeys.TIMELINE_ENABLED] !== false);
@@ -618,6 +621,8 @@ export default function Popup() {
         setSingleConvExportFormat(
           isSingleConvExportFormat(exportFormat) ? exportFormat : DEFAULT_SINGLE_CONV_EXPORT_FORMAT,
         );
+        const storedVisualEffect = result[StorageKeys.GV_VISUAL_EFFECT];
+        setVisualEffect(storedVisualEffect === 'off' || storedVisualEffect === 'sakura' ? storedVisualEffect : 'off');
       });
   }, []);
 
@@ -810,6 +815,54 @@ export default function Popup() {
                                 </div>
                               </div>
                               <p className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">{config.hint}</p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Section>
+                <Section title="Visual Effects">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Effects</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['sakura'].map((effectValue) => {
+                        const config = VISUAL_EFFECT_CONFIGS[effectValue as VisualEffect];
+                        const isSelected = visualEffect === effectValue;
+                        return (
+                          <label
+                            key={effectValue}
+                            className={`
+                              relative cursor-pointer rounded-lg border-2 p-3 transition-all duration-200
+                              ${isSelected 
+                                ? 'border-primary/50 shadow-[0_0_12px_rgba(var(--primary),0.3)]' 
+                                : 'border-border/60 hover:border-border hover:shadow-md'
+                              }
+                            `}
+                            htmlFor={`effect-${effectValue}`}
+                          >
+                            <input
+                              id={`effect-${effectValue}`}
+                              type="radio"
+                              name="visualEffect"
+                              value={effectValue}
+                              checked={isSelected}
+                              onChange={() => {
+                                setVisualEffect(effectValue as VisualEffect);
+                                void setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effectValue });
+                              }}
+                              className="sr-only"
+                            />
+                            {isSelected && (
+                              <span className="absolute right-2 top-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                                {t('active')}
+                              </span>
+                            )}
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">{config.emoji} {config.name}</span>
+                              </div>
+                              <p className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">{config.description}</p>
                             </div>
                           </label>
                         );

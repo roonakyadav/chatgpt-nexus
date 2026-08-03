@@ -166,6 +166,9 @@ export const StorageKeys = {
   // Popup selected category
   GV_POPUP_SELECTED_CATEGORY: 'gvPopupSelectedCategory',
 
+  // Visual Effects
+  GV_VISUAL_EFFECT: 'gvVisualEffect',
+
   // Folder as Project
   FOLDER_PROJECT_ENABLED: 'gvFolderProjectEnabled',
   FOLDER_PROJECT_PENDING_FOLDER_ID: 'gvFolderProjectPendingFolderId',
