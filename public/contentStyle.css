@@ -2365,7 +2365,7 @@ body.dark-theme .gv-pm-cancel:hover {
 }
 
 .gv-pm-empty {
-  opacity: 0.5;
+  opacity: 1;
   font-size: 13px;
   padding: 24px 16px;
   text-align: center;

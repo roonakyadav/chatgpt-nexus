@@ -509,54 +509,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       svc.subscribe(() => applyVersionUnread(svc.getLastSnapshot().hasUnread));
     });
 
-    // Theme toggle
-    const themeToggle = createEl('button', 'gv-pm-theme-toggle');
-    themeToggle.setAttribute('type', 'button');
-    let currentPMTheme: PMTheme = detectPageTheme();
-
-    function applyPMTheme(theme: PMTheme) {
-      currentPMTheme = theme;
-      panel.setAttribute('data-gv-theme', theme);
-      themeToggle.classList.toggle('gv-pm-theme-dark', theme === 'dark');
-      themeToggle.innerHTML = getThemeIconSvg(theme);
-      themeToggle.title = theme === 'dark' ? i18n.t('pm_theme_light') : i18n.t('pm_theme_dark');
-      themeToggle.setAttribute('aria-label', themeToggle.title);
-    }
-
-    applyPMTheme(currentPMTheme);
-
-    // Load saved theme preference
-    (async () => {
-      try {
-        const result = await browser.storage.sync.get(STORAGE_KEYS.theme);
-        const saved = result[STORAGE_KEYS.theme];
-        if (saved === 'light' || saved === 'dark') {
-          applyPMTheme(saved);
-        }
-      } catch {
-        // Ignore and keep detected theme.
-      }
-    })();
-
-    themeToggle.addEventListener('click', async () => {
-      const newTheme: PMTheme = currentPMTheme === 'dark' ? 'light' : 'dark';
-      // Enable smooth color transition on all panel children
-      panel.classList.add('gv-pm-transitioning');
-      applyPMTheme(newTheme);
-      setTimeout(() => panel.classList.remove('gv-pm-transitioning'), 450);
-      try {
-        await browser.storage.sync.set({ [STORAGE_KEYS.theme]: newTheme });
-      } catch {
-        try {
-          await browser.storage.local.set({ [STORAGE_KEYS.theme]: newTheme });
-        } catch {
-          // Ignore
-        }
-      }
-    });
+    // Apply theme to panel (keep dark theme)
+    const currentPMTheme: PMTheme = detectPageTheme();
+    panel.setAttribute('data-gv-theme', currentPMTheme);
 
     titleRow.appendChild(title);
-    titleRow.appendChild(themeToggle);
     titleRow.appendChild(versionBadge);
     const controls = createEl('div', 'gv-pm-controls');
 
