@@ -12,13 +12,6 @@ interface Petal {
   rotation: number;
   rotationSpeed: number;
   opacity: number;
-  scaleX: number;
-  wobblePhase: number;
-  wobbleSpeed: number;
-  windPhase: number;
-  windSpeed: number;
-  flutterPhase: number;
-  flutterSpeed: number;
   layer: 'background' | 'middle' | 'foreground';
   spriteIndex: number;
 }
@@ -40,7 +33,6 @@ export class SakuraScene {
   private animationFrameId: number | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
-  private time = 0;
 
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this.canvas = canvas;
@@ -63,12 +55,46 @@ export class SakuraScene {
       // Draw petal shape centered on sprite
       spriteCtx.translate(12, 12);
       spriteCtx.fillStyle = color;
+
+      // Create 5 different petal silhouettes
       spriteCtx.beginPath();
-      spriteCtx.moveTo(0, -10);
-      spriteCtx.quadraticCurveTo(10, -5, 10, 0);
-      spriteCtx.quadraticCurveTo(10, 5, 0, 10);
-      spriteCtx.quadraticCurveTo(-10, 5, -10, 0);
-      spriteCtx.quadraticCurveTo(-10, -5, 0, -10);
+      switch (i) {
+        case 0: // Narrow
+          spriteCtx.moveTo(0, -12);
+          spriteCtx.quadraticCurveTo(6, -6, 6, 0);
+          spriteCtx.quadraticCurveTo(6, 6, 0, 12);
+          spriteCtx.quadraticCurveTo(-6, 6, -6, 0);
+          spriteCtx.quadraticCurveTo(-6, -6, 0, -12);
+          break;
+        case 1: // Wide
+          spriteCtx.moveTo(0, -8);
+          spriteCtx.quadraticCurveTo(12, -4, 12, 0);
+          spriteCtx.quadraticCurveTo(12, 4, 0, 8);
+          spriteCtx.quadraticCurveTo(-12, 4, -12, 0);
+          spriteCtx.quadraticCurveTo(-12, -4, 0, -8);
+          break;
+        case 2: // Slightly curved
+          spriteCtx.moveTo(0, -10);
+          spriteCtx.bezierCurveTo(8, -8, 10, 0, 8, 4);
+          spriteCtx.quadraticCurveTo(4, 8, 0, 10);
+          spriteCtx.bezierCurveTo(-8, 8, -10, 0, -8, -4);
+          spriteCtx.quadraticCurveTo(-4, -8, 0, -10);
+          break;
+        case 3: // Rounded
+          spriteCtx.moveTo(0, -9);
+          spriteCtx.quadraticCurveTo(9, -5, 9, 0);
+          spriteCtx.quadraticCurveTo(9, 5, 0, 9);
+          spriteCtx.quadraticCurveTo(-9, 5, -9, 0);
+          spriteCtx.quadraticCurveTo(-9, -5, 0, -9);
+          break;
+        case 4: // Elongated
+          spriteCtx.moveTo(0, -14);
+          spriteCtx.quadraticCurveTo(5, -7, 5, 0);
+          spriteCtx.quadraticCurveTo(5, 7, 0, 14);
+          spriteCtx.quadraticCurveTo(-5, 7, -5, 0);
+          spriteCtx.quadraticCurveTo(-5, -7, 0, -14);
+          break;
+      }
       spriteCtx.closePath();
       spriteCtx.fill();
 
@@ -105,21 +131,21 @@ export class SakuraScene {
     switch (layer) {
       case 'background':
         size = 6 + Math.random() * 6; // 6-12px
-        speedY = 0.3 + Math.random() * 0.5; // 0.3-0.8
+        speedY = 0.2 + Math.random() * 0.35; // 0.2-0.55 (reduced by ~30%)
         opacity = 0.2 + Math.random() * 0.2; // 0.2-0.4
-        speedX = (Math.random() - 0.5) * 1; // -0.5 to 0.5
+        speedX = (Math.random() - 0.5) * 0.7; // -0.35 to 0.35
         break;
       case 'middle':
         size = 10 + Math.random() * 8; // 10-18px
-        speedY = 0.6 + Math.random() * 0.8; // 0.6-1.4
+        speedY = 0.4 + Math.random() * 0.55; // 0.4-0.95 (reduced by ~30%)
         opacity = 0.4 + Math.random() * 0.3; // 0.4-0.7
-        speedX = (Math.random() - 0.5) * 1.5; // -0.75 to 0.75
+        speedX = (Math.random() - 0.5) * 1; // -0.5 to 0.5
         break;
       case 'foreground':
         size = 16 + Math.random() * 10; // 16-26px
-        speedY = 0.9 + Math.random() * 1.1; // 0.9-2.0
+        speedY = 0.6 + Math.random() * 0.75; // 0.6-1.35 (reduced by ~30%)
         opacity = 0.6 + Math.random() * 0.3; // 0.6-0.9
-        speedX = (Math.random() - 0.5) * 2; // -1 to 1
+        speedX = (Math.random() - 0.5) * 1.4; // -0.7 to 0.7
         break;
     }
 
@@ -130,15 +156,8 @@ export class SakuraScene {
       speedY,
       speedX,
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.03,
+      rotationSpeed: (Math.random() - 0.5) * 0.02,
       opacity,
-      scaleX: 0.8 + Math.random() * 0.4, // 0.8-1.2
-      wobblePhase: Math.random() * Math.PI * 2,
-      wobbleSpeed: 0.02 + Math.random() * 0.03,
-      windPhase: Math.random() * Math.PI * 2,
-      windSpeed: 0.005 + Math.random() * 0.01,
-      flutterPhase: Math.random() * Math.PI * 2,
-      flutterSpeed: 0.1 + Math.random() * 0.15,
       layer,
       spriteIndex: Math.floor(Math.random() * SPRITE_VARIANTS),
     };
@@ -154,7 +173,6 @@ export class SakuraScene {
     ctx.save();
     ctx.translate(petal.x, petal.y);
     ctx.rotate(petal.rotation);
-    ctx.scale(petal.scaleX, 1);
     ctx.globalAlpha = petal.opacity;
 
     // Draw cached sprite centered
@@ -167,25 +185,15 @@ export class SakuraScene {
     const canvas = this.canvas;
     if (!canvas) return;
 
-    this.time += 1;
-
     for (const petal of this.petals) {
       // Update position
       petal.y += petal.speedY;
 
-      // Complex wind system: long-period wind + individual drift + flutter
-      const longWind = Math.sin(this.time * petal.windSpeed + petal.windPhase) * 0.5;
-      const flutter = Math.sin(this.time * petal.flutterSpeed + petal.flutterPhase) * 0.3;
-      petal.x += petal.speedX + longWind + flutter;
+      // Gentle horizontal wind (single component)
+      petal.x += petal.speedX + Math.sin(petal.y * 0.01) * 0.2;
 
-      // Rotation with wobble
+      // Slow rotation only
       petal.rotation += petal.rotationSpeed;
-      const wobble = Math.sin(this.time * petal.wobbleSpeed + petal.wobblePhase) * 0.02;
-      petal.rotation += wobble;
-
-      // X-scale flipping to simulate 3D rotation
-      const flipPhase = Math.sin(this.time * petal.wobbleSpeed * 0.5 + petal.wobblePhase);
-      petal.scaleX = 0.8 + flipPhase * 0.4;
 
       // Recycle if off screen
       if (petal.y > canvas.height + 30) {
@@ -198,13 +206,6 @@ export class SakuraScene {
         petal.rotation = newPetal.rotation;
         petal.rotationSpeed = newPetal.rotationSpeed;
         petal.opacity = newPetal.opacity;
-        petal.scaleX = newPetal.scaleX;
-        petal.wobblePhase = newPetal.wobblePhase;
-        petal.wobbleSpeed = newPetal.wobbleSpeed;
-        petal.windPhase = newPetal.windPhase;
-        petal.windSpeed = newPetal.windSpeed;
-        petal.flutterPhase = newPetal.flutterPhase;
-        petal.flutterSpeed = newPetal.flutterSpeed;
         petal.spriteIndex = newPetal.spriteIndex;
       }
 
@@ -230,10 +231,10 @@ export class SakuraScene {
     }
   }
 
-  private animate = (): void => {
+  private animate(): void {
     this.render();
-    this.animationFrameId = requestAnimationFrame(this.animate);
-  };
+    this.animationFrameId = requestAnimationFrame(() => this.animate());
+  }
 
   start(): void {
     if (this.animationFrameId !== null) {
