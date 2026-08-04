@@ -16,6 +16,43 @@
  */
 import browser from 'webextension-polyfill';
 import type { AnnouncementAction, RemoteAnnouncement } from './types';
+import './modal.css';
+
+/**
+ * Get icon SVG for announcement type.
+ */
+function getTypeIcon(type?: string): string {
+  const icons: Record<string, string> = {
+    release: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+    tip: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.9.27-1.85.26-2.83a7.07 7.07 0 0 0-4-6.32c-.76-.36-1.6-.58-2.46-.63A7.07 7.07 0 0 0 3.8 8.75c-.05.86.17 1.7.53 2.46a7.07 7.07 0 0 0 6.32 4c.98.01 1.93-.08 2.83-.26"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+    bugfix: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="8" x="8" y="8" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M8 8v6"/><path d="M16 8v6"/><path d="M9 12h6"/><path d="M12 16v4"/><path d="M12 4V2"/></svg>`,
+    warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+    community: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
+  };
+  
+  if (!type) return icons.info;
+  const lowerType = type.toLowerCase();
+  return icons[lowerType] || icons.info;
+}
+
+/**
+ * Get display label for announcement type.
+ */
+function getTypeLabel(type?: string): string {
+  const labels: Record<string, string> = {
+    release: 'Release',
+    tip: 'Tip',
+    bugfix: 'Bug Fix',
+    warning: 'Warning',
+    community: 'Community',
+    info: 'Info',
+  };
+  
+  if (!type) return labels.info;
+  const lowerType = type.toLowerCase();
+  return labels[lowerType] || labels.info;
+}
 
 const MODAL_CLASS = 'gv-announcement-modal';
 const BACKDROP_CLASS = 'gv-announcement-modal__backdrop';
@@ -118,9 +155,22 @@ export function openAnnouncementModal(args: OpenModalArgs): ModalHandle {
   card.setAttribute('aria-modal', 'true');
   card.setAttribute('aria-labelledby', 'gv-announcement-modal-title');
 
-  // Header
+  // Header with icon, title, version, date, type badge
   const header = document.createElement('header');
   header.className = `${MODAL_CLASS}__header`;
+
+  // Type icon
+  const iconContainer = document.createElement('div');
+  iconContainer.className = `${MODAL_CLASS}__icon`;
+  iconContainer.innerHTML = getTypeIcon(args.announcement.type);
+  header.appendChild(iconContainer);
+
+  // Title section
+  const titleSection = document.createElement('div');
+  titleSection.className = `${MODAL_CLASS}__title-section`;
+
+  const titleRow = document.createElement('div');
+  titleRow.className = `${MODAL_CLASS}__title-row`;
 
   const titleEl = document.createElement('h2');
   titleEl.id = 'gv-announcement-modal-title';
@@ -129,22 +179,34 @@ export function openAnnouncementModal(args: OpenModalArgs): ModalHandle {
     ? `${args.versionPrefix ?? 'v'}${args.announcement.version} — `
     : '';
   titleEl.textContent = `${titlePrefix}${args.announcement.title}`;
-  header.appendChild(titleEl);
+  titleRow.appendChild(titleEl);
 
+  // Type badge
+  const typeBadge = document.createElement('span');
+  typeBadge.className = `${MODAL_CLASS}__type-badge`;
+  typeBadge.textContent = getTypeLabel(args.announcement.type);
+  titleRow.appendChild(typeBadge);
+
+  titleSection.appendChild(titleRow);
+
+  // Date
   const dateText = formatPublishedAt(args.announcement.publishedAt);
   if (dateText) {
     const date = document.createElement('div');
     date.className = `${MODAL_CLASS}__date`;
     date.textContent = dateText;
-    header.appendChild(date);
+    titleSection.appendChild(date);
   }
 
+  header.appendChild(titleSection);
+
+  // Close button
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.className = `${MODAL_CLASS}__close`;
   closeBtn.setAttribute('aria-label', args.closeLabel);
   closeBtn.title = args.closeLabel;
-  closeBtn.textContent = '×';
+  closeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="m6 6 12 12"/></svg>`;
   header.appendChild(closeBtn);
 
   card.appendChild(header);
@@ -153,13 +215,41 @@ export function openAnnouncementModal(args: OpenModalArgs): ModalHandle {
   const body = document.createElement('div');
   body.className = `${MODAL_CLASS}__body`;
 
+  // Hero image with skeleton loading
   if (args.announcement.primaryImageUrl) {
+    const heroContainer = document.createElement('div');
+    heroContainer.className = `${MODAL_CLASS}__hero-container`;
+    
+    // Skeleton loader
+    const skeleton = document.createElement('div');
+    skeleton.className = `${MODAL_CLASS}__hero-skeleton`;
+    heroContainer.appendChild(skeleton);
+    
     const img = document.createElement('img');
     img.className = `${MODAL_CLASS}__hero`;
-    img.src = args.announcement.primaryImageUrl;
     img.alt = '';
     img.loading = 'lazy';
-    body.appendChild(img);
+    
+    img.onload = () => {
+      skeleton.remove();
+      img.classList.add(`${MODAL_CLASS}__hero--loaded`);
+    };
+    
+    img.onerror = () => {
+      heroContainer.remove();
+    };
+    
+    img.src = args.announcement.primaryImageUrl;
+    heroContainer.appendChild(img);
+    body.appendChild(heroContainer);
+  }
+
+  // Summary as highlighted subtitle
+  if (args.announcement.summary) {
+    const summaryEl = document.createElement('div');
+    summaryEl.className = `${MODAL_CLASS}__summary`;
+    summaryEl.textContent = args.announcement.summary;
+    body.appendChild(summaryEl);
   }
 
   const md = document.createElement('div');
@@ -221,12 +311,54 @@ export function openAnnouncementModal(args: OpenModalArgs): ModalHandle {
 
   card.appendChild(body);
 
+  // Footer
+  const footer = document.createElement('footer');
+  footer.className = `${MODAL_CLASS}__footer`;
+  
+  const footerActions = document.createElement('div');
+  footerActions.className = `${MODAL_CLASS}__footer-actions`;
+  
+  // Dismiss button
+  const dismissBtn = document.createElement('button');
+  dismissBtn.type = 'button';
+  dismissBtn.className = `${MODAL_CLASS}__footer-btn ${MODAL_CLASS}__footer-btn--secondary`;
+  dismissBtn.textContent = 'Dismiss';
+  dismissBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    destroy();
+    args.onClose();
+  });
+  footerActions.appendChild(dismissBtn);
+  
+  // Close button
+  const closeFooterBtn = document.createElement('button');
+  closeFooterBtn.type = 'button';
+  closeFooterBtn.className = `${MODAL_CLASS}__footer-btn ${MODAL_CLASS}__footer-btn--primary`;
+  closeFooterBtn.textContent = 'Close';
+  closeFooterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    destroy();
+    args.onClose();
+  });
+  footerActions.appendChild(closeFooterBtn);
+  
+  footer.appendChild(footerActions);
+  card.appendChild(footer);
+
   backdrop.appendChild(card);
   document.body.appendChild(backdrop);
 
   function destroy() {
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
+    // Add fade-out animation
+    backdrop.style.animation = 'fadeOut 0.2s ease-out forwards';
+    
+    // Remove after animation completes
+    setTimeout(() => {
+      backdrop.remove();
+      document.removeEventListener('keydown', onKey);
+    }, 200);
   }
 
   function onKey(e: KeyboardEvent) {
