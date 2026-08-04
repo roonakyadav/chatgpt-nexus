@@ -74,17 +74,14 @@ export interface RemoteAnnouncement {
 export interface AnnouncementAction {
   /** Button label text. */
   label: string;
-  /** URL to open when button is clicked. */
-  url: string;
+  /** Action type: 'url' for external links, 'internal' for extension navigation. */
+  type: 'url' | 'internal';
   /**
-   * Optional button style variant.
-   * Examples: 'primary', 'secondary', 'danger'
+   * Target for the action.
+   * - For 'url': full URL to open
+   * - For 'internal': internal route identifier (e.g., 'appearance.visualEffects')
    */
-  style?: string;
-  /**
-   * Optional flag to open URL in new tab (default: true).
-   */
-  openInNewTab?: boolean;
+  target: string;
 }
 
 export interface RemoteAnnouncementFile {

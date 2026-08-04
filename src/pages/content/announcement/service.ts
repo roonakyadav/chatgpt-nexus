@@ -181,14 +181,13 @@ function shouldAutoOpenModal(
 function isAnnouncementAction(value: unknown): value is AnnouncementAction {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
-  return (
-    typeof v.label === 'string' &&
-    v.label.length > 0 &&
-    typeof v.url === 'string' &&
-    v.url.length > 0 &&
-    (v.style === undefined || typeof v.style === 'string') &&
-    (v.openInNewTab === undefined || typeof v.openInNewTab === 'boolean')
-  );
+  
+  // Validate required fields
+  if (typeof v.label !== 'string' || v.label.length === 0) return false;
+  if (v.type !== 'url' && v.type !== 'internal') return false;
+  if (typeof v.target !== 'string' || v.target.length === 0) return false;
+  
+  return true;
 }
 
 function isAnnouncement(value: unknown): value is RemoteAnnouncement {

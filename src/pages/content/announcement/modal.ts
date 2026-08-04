@@ -14,7 +14,8 @@
  * unlike the bubble which is deliberately not. The bubble surfaces the
  * announcement; the modal is the user's explicit "read it" gesture.
  */
-import type { RemoteAnnouncement } from './types';
+import browser from 'webextension-polyfill';
+import type { AnnouncementAction, RemoteAnnouncement } from './types';
 
 const MODAL_CLASS = 'gv-announcement-modal';
 const BACKDROP_CLASS = 'gv-announcement-modal__backdrop';
@@ -38,6 +39,69 @@ function formatPublishedAt(input: string | undefined): string {
     return d.toISOString().slice(0, 10);
   } catch {
     return '';
+  }
+}
+
+/**
+ * Handle announcement action clicks.
+ * Supports 'url' (external links) and 'internal' (extension navigation).
+ */
+function handleAction(action: AnnouncementAction): void {
+  try {
+    if (action.type === 'url') {
+      // Open external URL in new tab
+      if (action.target) {
+        window.open(action.target, '_blank', 'noopener,noreferrer');
+      }
+    } else if (action.type === 'internal') {
+      // Handle internal navigation
+      handleInternalAction(action.target);
+    }
+  } catch (error) {
+    console.warn('[GPT-Nexus] Failed to handle announcement action:', error);
+  }
+}
+
+/**
+ * Handle internal action routing.
+ * Maps internal targets to extension functionality.
+ */
+function handleInternalAction(target: string): void {
+  switch (target) {
+    case 'appearance.visualEffects':
+      // Open extension options and navigate to visual effects
+      browser.runtime.sendMessage({ type: 'gv.openPopup' }).catch(() => {
+        console.debug('[GPT-Nexus] Could not open extension popup');
+      });
+      break;
+    
+    case 'appearance.themes':
+      // Open extension options and navigate to themes
+      browser.runtime.sendMessage({ type: 'gv.openPopup' }).catch(() => {
+        console.debug('[GPT-Nexus] Could not open extension popup');
+      });
+      break;
+    
+    case 'about':
+      // Open extension options and navigate to about
+      browser.runtime.sendMessage({ type: 'gv.openPopup' }).catch(() => {
+        console.debug('[GPT-Nexus] Could not open extension popup');
+      });
+      break;
+    
+    case 'promptManager':
+      // Open prompt manager (already on ChatGPT page, just trigger it)
+      console.debug('[GPT-Nexus] Prompt manager action - already on ChatGPT page');
+      break;
+    
+    case 'announcementHistory':
+      // Future placeholder for announcement history
+      console.debug('[GPT-Nexus] Announcement history not yet implemented');
+      break;
+    
+    default:
+      console.debug('[GPT-Nexus] Unknown internal action target:', target);
+      break;
   }
 }
 
@@ -126,6 +190,34 @@ export function openAnnouncementModal(args: OpenModalArgs): ModalHandle {
     }
   });
   body.appendChild(md);
+
+  // Render action buttons if present (max 3)
+  if (args.announcement.actions && args.announcement.actions.length > 0) {
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = `${MODAL_CLASS}__actions`;
+    
+    // Limit to 3 actions, first is primary
+    const actionsToRender = args.announcement.actions.slice(0, 3);
+    
+    actionsToRender.forEach((action, index) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = index === 0 
+        ? `${MODAL_CLASS}__action ${MODAL_CLASS}__action--primary`
+        : `${MODAL_CLASS}__action ${MODAL_CLASS}__action--secondary`;
+      btn.textContent = action.label;
+      
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleAction(action);
+      });
+      
+      actionsContainer.appendChild(btn);
+    });
+    
+    body.appendChild(actionsContainer);
+  }
 
   card.appendChild(body);
 
