@@ -7,6 +7,7 @@ import browser from 'webextension-polyfill';
 import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
 import { StorageKeys, type Theme, THEMES } from '@/core/types/common';
 import { type VisualEffect, VISUAL_EFFECT_CONFIGS, COMING_SOON_EFFECTS } from '@/core/visualEffects';
+import { EXTENSION_VERSION } from '@/core/utils/version';
 
 type PopupCategory =
   | 'general'
@@ -263,7 +264,6 @@ function CategoryNav({
 export default function Popup() {
   const { t } = useLanguage();
   const [showStarredHistory, setShowStarredHistory] = useState(false);
-  const [extVersion, setExtVersion] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PopupCategory>('general');
 
   const [timelineEnabled, setTimelineEnabled] = useState(true);
@@ -533,12 +533,6 @@ export default function Popup() {
   }, [fontFamily]);
 
   useEffect(() => {
-    try {
-      setExtVersion(chrome?.runtime?.getManifest?.()?.version ?? '');
-    } catch {
-      setExtVersion('');
-    }
-
     void browser.storage.sync
       .get({
         [StorageKeys.GV_POPUP_SELECTED_CATEGORY]: 'general' as PopupCategory,
@@ -813,8 +807,8 @@ export default function Popup() {
       <div className="border-border/50 flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-baseline gap-3">
           <h1 className="text-primary text-xl font-semibold tracking-tight">{t('extName')}</h1>
-          {extVersion && (
-            <span className="text-muted-foreground text-xs font-medium">v{extVersion}</span>
+          {EXTENSION_VERSION && (
+            <span className="text-muted-foreground text-xs font-medium">v{EXTENSION_VERSION}</span>
           )}
         </div>
         <DarkModeToggle />
@@ -1764,19 +1758,109 @@ export default function Popup() {
             {selectedCategory === 'about' && (
               <div className="space-y-6">
                 <Section title={t('about')}>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{t('extensionVersion')}</span>
-                      <span className="text-muted-foreground text-sm">{extVersion || 'N/A'}</span>
+                  <div className="space-y-6">
+                    {/* Product Info */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-primary text-lg font-semibold">GPT-Nexus</h3>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{t('extensionVersion')}</span>
+                        <span className="text-muted-foreground text-sm">{EXTENSION_VERSION || 'N/A'}</span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium block">Built by</span>
+                        <span className="text-muted-foreground text-sm">Ronak Yadav</span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium block">Description</span>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          A premium customization suite for ChatGPT focused on beautiful visuals, productivity and personalization.
+                        </p>
+                      </div>
                     </div>
-                    <a
-                      href={PROJECT_REPOSITORY_URL}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary hover:underline text-sm"
-                    >
-                      {t('starProject')}
-                    </a>
+
+                    {/* Divider */}
+                    <div className="border-border/50 border-t" />
+
+                    {/* Actions */}
+                    <div className="space-y-3">
+                      <span className="text-sm font-medium block">Actions</span>
+                      <div className="grid gap-2">
+                        <a
+                          href={PROJECT_REPOSITORY_URL}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          </svg>
+                          View Source
+                        </a>
+                        <a
+                          href={`${PROJECT_REPOSITORY_URL}/blob/main/CHANGELOG.md`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          What's New
+                        </a>
+                        <a
+                          href={`${PROJECT_REPOSITORY_URL}/issues`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          Report a Bug
+                        </a>
+                        <a
+                          href={`${PROJECT_REPOSITORY_URL}/projects`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          Roadmap
+                        </a>
+                        <a
+                          href={`${PROJECT_REPOSITORY_URL}/sponsor`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                          Support Development
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-border/50 border-t" />
+
+                    {/* License */}
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium block">License</span>
+                        <span className="text-muted-foreground text-sm">MIT License</span>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-muted-foreground text-sm">Made in India</span>
+                      </div>
+                    </div>
                   </div>
                 </Section>
               </div>

@@ -474,15 +474,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     titleText.textContent = 'GPT-Nexus';
     title.appendChild(titleText);
 
-    const manifestVersion = chrome?.runtime?.getManifest?.()?.version;
     const versionBadge = document.createElement('span');
     versionBadge.className = 'gv-pm-version';
     versionBadge.setAttribute('role', 'button');
     versionBadge.setAttribute('tabindex', '0');
-    versionBadge.title = manifestVersion
-      ? `${i18n.t('extensionVersion')} ${manifestVersion} — ${i18n.t('announcementVersionChipHint') || 'click to view announcements'}`
+    versionBadge.title = EXTENSION_VERSION
+      ? `${i18n.t('extensionVersion')} ${EXTENSION_VERSION} — ${i18n.t('announcementVersionChipHint') || 'click to view announcements'}`
       : i18n.t('extensionVersion');
-    versionBadge.textContent = manifestVersion ?? '...';
+    versionBadge.textContent = EXTENSION_VERSION ?? '...';
     // Make the version chip a secondary entry-point into the announcement
     // modal (besides the top-bar megaphone). Lazy-import the module so
     // the prompt-manager chunk doesn't drag the markdown renderer in
