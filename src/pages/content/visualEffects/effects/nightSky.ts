@@ -1,16 +1,16 @@
 /**
- * Fireflies Visual Effect
- * Firefly animation using particle simulation
+ * Night Sky Visual Effect
+ * Star animation using particle simulation
  */
 
 import { canvasManager } from '../canvasManager';
-import { FirefliesScene } from './firefliesScene';
+import { NightSkyScene } from './nightSkyScene';
 import type { VisualEffect } from '../types';
 
-class FirefliesEffect implements VisualEffect {
-  id = 'fireflies';
+class NightSkyEffect implements VisualEffect {
+  id = 'night-sky';
   private isEnabled = false;
-  private scene: FirefliesScene | null = null;
+  private scene: NightSkyScene | null = null;
   private resizeListener: (() => void) | null = null;
 
   enable(): void {
@@ -24,12 +24,12 @@ class FirefliesEffect implements VisualEffect {
       const ctx = canvasManager.getContext();
 
       if (!ctx) {
-        console.error('[FirefliesEffect] Failed to get canvas context');
+        console.error('[NightSkyEffect] Failed to get canvas context');
         return;
       }
 
       // Create scene
-      this.scene = new FirefliesScene(canvas, ctx);
+      this.scene = new NightSkyScene(canvas, ctx);
       this.scene.start();
 
       // Setup resize listener
@@ -46,7 +46,7 @@ class FirefliesEffect implements VisualEffect {
 
       this.isEnabled = true;
     } catch (error) {
-      console.error('[FirefliesEffect] Failed to enable:', error);
+      console.error('[NightSkyEffect] Failed to enable:', error);
     }
   }
 
@@ -73,9 +73,9 @@ class FirefliesEffect implements VisualEffect {
 
       this.isEnabled = false;
     } catch (error) {
-      console.error('[FirefliesEffect] Failed to disable:', error);
+      console.error('[NightSkyEffect] Failed to disable:', error);
     }
   }
 }
 
-export const firefliesEffect = new FirefliesEffect();
+export const nightSkyEffect = new NightSkyEffect();

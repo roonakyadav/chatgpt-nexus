@@ -3,9 +3,9 @@
  * Scalable architecture for adding new visual effects
  */
 
-export type VisualEffect = 'off' | 'sakura' | 'snow' | 'rain' | 'fireflies';
+export type VisualEffect = 'off' | 'sakura' | 'snow' | 'rain' | 'night-sky';
 
-export const VISUAL_EFFECTS: readonly VisualEffect[] = ['off', 'sakura', 'snow', 'rain', 'fireflies'] as const;
+export const VISUAL_EFFECTS: readonly VisualEffect[] = ['off', 'sakura', 'snow', 'rain', 'night-sky'] as const;
 
 export type PerformanceCost = 'low' | 'medium' | 'high';
 
@@ -57,11 +57,11 @@ export const VISUAL_EFFECT_CONFIGS: Record<VisualEffect, VisualEffectConfig> = {
     supportsLightTheme: true,
     supportsDarkTheme: true,
   },
-  fireflies: {
-    id: 'fireflies',
-    name: 'Fireflies',
-    description: 'Gentle glowing lights drifting through the night',
-    emoji: '✨',
+  'night-sky': {
+    id: 'night-sky',
+    name: 'Night Sky',
+    description: 'A peaceful star-filled night with softly twinkling stars.',
+    emoji: '🌌',
     performanceCost: 'low',
     supportsLightTheme: true,
     supportsDarkTheme: true,

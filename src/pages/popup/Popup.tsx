@@ -391,7 +391,7 @@ export default function Popup() {
     await setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effect });
     
     // Notify content script
-    if (effect === 'sakura' || effect === 'snow' || effect === 'rain' || effect === 'fireflies') {
+    if (effect === 'sakura' || effect === 'snow' || effect === 'rain' || effect === 'night-sky') {
       await browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
         if (tabs[0]?.id) {
           void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {});
@@ -803,7 +803,7 @@ export default function Popup() {
                     
                     {/* Available Effects */}
                     <div className="grid grid-cols-2 gap-3">
-                      {['sakura', 'snow', 'rain', 'fireflies'].map((effectValue) => {
+                      {['sakura', 'snow', 'rain', 'night-sky'].map((effectValue) => {
                         const config = VISUAL_EFFECT_CONFIGS[effectValue as VisualEffect];
                         const isSelected = visualEffect === effectValue;
                         const isPreviewing = previewingEffect === effectValue;

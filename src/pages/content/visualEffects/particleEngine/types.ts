@@ -37,6 +37,19 @@ export interface Particle {
   destY?: number;
   flightSpeed?: number;
   arrivalThreshold?: number;
+  // Shooting star properties
+  isShootingStar?: boolean;
+  shootingStarLife?: number;
+  shootingStarMaxLife?: number;
+  shootingStarSpeedX?: number;
+  shootingStarSpeedY?: number;
+  shootingStarTrail?: { x: number; y: number }[];
+  // Star twinkling properties
+  minBrightness?: number;
+  maxBrightness?: number;
+  isBrighter?: boolean;
+  isHero?: boolean;
+  glowRadius?: number;
 }
 
 export interface Splash {

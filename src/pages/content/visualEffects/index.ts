@@ -14,7 +14,7 @@ import { VisualEffectsRegistry } from './registry';
 import { sakuraEffect } from './effects/sakura';
 import { snowEffect } from './effects/snow';
 import { rainEffect } from './effects/rain';
-import { firefliesEffect } from './effects/fireflies';
+import { nightSkyEffect } from './effects/nightSky';
 
 let managerInstance: VisualEffectsManager | null = null;
 let registryInstance: VisualEffectsRegistry | null = null;
@@ -35,7 +35,7 @@ async function initializeFullSystem(): Promise<void> {
       registryInstance.register(sakuraEffect);
       registryInstance.register(snowEffect);
       registryInstance.register(rainEffect);
-      registryInstance.register(firefliesEffect);
+      registryInstance.register(nightSkyEffect);
     }
 
     // Create and initialize manager
@@ -77,18 +77,18 @@ function setupStorageListener(): void {
     const newValue = change.newValue as string | undefined;
     const oldValue = change.oldValue as string | undefined;
 
-    // If Sakura, Snow, Rain, or Fireflies is being enabled, initialize the full system
-    if ((newValue === 'sakura' || newValue === 'snow' || newValue === 'rain' || newValue === 'fireflies') && oldValue !== 'off') {
+    // If Sakura, Snow, Rain, or Night Sky is being enabled, initialize the full system
+    if ((newValue === 'sakura' || newValue === 'snow' || newValue === 'rain' || newValue === 'night-sky') && oldValue !== 'off') {
       void initializeFullSystem();
     }
 
-    // If Sakura, Snow, Rain, or Fireflies is being disabled and system is initialized, destroy it
-    if (newValue === 'off' && (oldValue === 'sakura' || oldValue === 'snow' || oldValue === 'rain' || oldValue === 'fireflies') && managerInstance) {
+    // If Sakura, Snow, Rain, or Night Sky is being disabled and system is initialized, destroy it
+    if (newValue === 'off' && (oldValue === 'sakura' || oldValue === 'snow' || oldValue === 'rain' || oldValue === 'night-sky') && managerInstance) {
       destroyFullSystem();
     }
 
     // If switching between effects, the manager will handle the transition
-    if ((newValue === 'sakura' || newValue === 'snow' || newValue === 'rain' || newValue === 'fireflies') && (oldValue === 'sakura' || oldValue === 'snow' || oldValue === 'rain' || oldValue === 'fireflies') && newValue !== oldValue) {
+    if ((newValue === 'sakura' || newValue === 'snow' || newValue === 'rain' || newValue === 'night-sky') && (oldValue === 'sakura' || oldValue === 'snow' || oldValue === 'rain' || oldValue === 'night-sky') && newValue !== oldValue) {
       // Manager will handle the switch via its storage listener
     }
   };
@@ -103,7 +103,7 @@ async function isEffectEnabled(): Promise<boolean> {
   try {
     const result = await browser.storage.sync.get(StorageKeys.GV_VISUAL_EFFECT);
     const value = result[StorageKeys.GV_VISUAL_EFFECT] as string;
-    return value === 'sakura' || value === 'snow' || value === 'rain' || value === 'fireflies';
+    return value === 'sakura' || value === 'snow' || value === 'rain' || value === 'night-sky';
   } catch {
     return false;
   }

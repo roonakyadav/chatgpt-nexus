@@ -1,20 +1,20 @@
 /**
- * Fireflies Scene
- * Handles particle simulation and rendering for fireflies
- * Uses the generic ParticleSystem with Fireflies-specific configuration
+ * Night Sky Scene
+ * Handles particle simulation and rendering for night sky stars
+ * Uses the generic ParticleSystem with Night Sky-specific configuration
  */
 
 import { ParticleSystem } from '../particleEngine/ParticleSystem';
 import { SpriteCache } from '../particleEngine/SpriteCache';
-import { firefliesConfig } from './firefliesConfig';
+import { nightSkyConfig } from './nightSkyConfig';
 
 const SPRITE_CACHE = new SpriteCache();
 
-export class FirefliesScene {
+export class NightSkyScene {
   private particleSystem: ParticleSystem | null = null;
 
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-    this.particleSystem = new ParticleSystem(canvas, ctx, firefliesConfig, SPRITE_CACHE);
+    this.particleSystem = new ParticleSystem(canvas, ctx, nightSkyConfig, SPRITE_CACHE);
   }
 
   start(): void {
