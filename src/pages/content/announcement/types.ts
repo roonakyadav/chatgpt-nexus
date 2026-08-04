@@ -13,6 +13,12 @@
  * be backwards-compatible — `current` stays at top level, parsers that
  * only know v=1 can keep working.
  */
+
+/**
+ * Announcement priority levels.
+ * Controls display behavior and auto-opening logic.
+ */
+export type AnnouncementPriority = 'low' | 'normal' | 'high' | 'critical';
 export interface RemoteAnnouncement {
   /** Stable, unique id — bumping this re-pops the bubble for every user. */
   id: string;
@@ -45,10 +51,10 @@ export interface RemoteAnnouncement {
    */
   type?: string;
   /**
-   * Optional priority level for sorting or display logic.
-   * Higher values indicate higher priority. Typical range: 1-5.
+   * Optional priority level controlling display behavior.
+   * Defaults to 'normal' if not specified.
    */
-  priority?: number;
+  priority?: AnnouncementPriority;
   /**
    * Optional array of action buttons to display in the modal.
    * Each action can have a label, URL, and optional styling hints.

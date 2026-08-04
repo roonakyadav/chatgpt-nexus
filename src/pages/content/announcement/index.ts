@@ -215,6 +215,14 @@ function applySnapshot(snapshot: AnnouncementSnapshot): void {
     // re-pop later.
     destroyBubble();
   }
+  
+  // Handle auto-open for HIGH/CRITICAL priorities
+  if (snapshot.shouldAutoOpen && snapshot.current) {
+    // Mark as shown immediately to prevent repeated auto-opens
+    void markBubbleShown(snapshot.current.id);
+    // Auto-open the modal
+    openModalFor(snapshot.current);
+  }
 }
 
 /**

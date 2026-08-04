@@ -21,9 +21,12 @@ import { StorageKeys } from '@/core/types/common';
 import type {
   AnnouncementAction,
   AnnouncementCacheEntry,
+  AnnouncementPriority,
   RemoteAnnouncement,
   RemoteAnnouncementFile,
 } from './types';
+
+const VALID_PRIORITIES: readonly AnnouncementPriority[] = ['low', 'normal', 'high', 'critical'] as const;
 
 const CACHE_TTL_MS = 30 * 60 * 1000; // refetch at most every 30 min
 
@@ -72,6 +75,109 @@ const CDN_BUST_WINDOW_MS = 5 * 60 * 1000;
 
 type Listener = (current: RemoteAnnouncement | null) => void;
 
+/**
+ * Get the priority for an announcement, defaulting to 'normal'.
+ */
+function getPriority(announcement: RemoteAnnouncement | null): AnnouncementPriority {
+  return announcement?.priority ?? 'normal';
+}
+
+/**
+ * Determine if the unread indicator (red dot) should be shown.
+ *
+ * LOW: Always show if unseen
+ * NORMAL: Always show if unseen (respecting dot cooldown)
+ * HIGH: Always show if unseen (respecting dot cooldown)
+ * CRITICAL: Always show if unseen (ignores dot cooldown)
+ */
+function shouldShowUnreadDot(
+  announcement: RemoteAnnouncement | null,
+  seenId: string | null,
+  lastSeenAt: number,
+): boolean {
+  if (!announcement) return false;
+  
+  const priority = getPriority(announcement);
+  const now = Date.now();
+  const dotCooldownActive = now - lastSeenAt < DOT_HARD_COOLDOWN_MS;
+  
+  // CRITICAL ignores dot cooldown
+  if (priority === 'critical') {
+    return announcement.id !== seenId;
+  }
+  
+  // Other priorities respect dot cooldown
+  if (dotCooldownActive) return false;
+  
+  return announcement.id !== seenId;
+}
+
+/**
+ * Determine if the bubble should auto-pop.
+ *
+ * LOW: Never auto-pop
+ * NORMAL: Auto-pop if unseen and not yet shown (respecting bubble cooldown)
+ * HIGH: Auto-pop if unseen and not yet shown (respecting bubble cooldown)
+ * CRITICAL: Never auto-pop (uses auto-open modal instead)
+ */
+function shouldShowBubble(
+  announcement: RemoteAnnouncement | null,
+  seenId: string | null,
+  bubbleShownFor: string | null,
+  lastBubbleAt: number,
+): boolean {
+  if (!announcement) return false;
+  
+  const priority = getPriority(announcement);
+  const now = Date.now();
+  const bubbleCooldownActive = now - lastBubbleAt < BUBBLE_HARD_COOLDOWN_MS;
+  
+  // LOW never shows bubble
+  if (priority === 'low') return false;
+  
+  // CRITICAL uses auto-open modal, not bubble
+  if (priority === 'critical') return false;
+  
+  // Respect bubble cooldown for NORMAL and HIGH
+  if (bubbleCooldownActive) return false;
+  
+  // Show if not seen and not yet shown for this id
+  return announcement.id !== seenId && announcement.id !== bubbleShownFor;
+}
+
+/**
+ * Determine if the announcement modal should auto-open.
+ *
+ * LOW: Never auto-open
+ * NORMAL: Never auto-open
+ * HIGH: Auto-open once when first detected (respecting seen tracking)
+ * CRITICAL: Auto-open immediately, ignores cooldowns, shows until seen
+ */
+function shouldAutoOpenModal(
+  announcement: RemoteAnnouncement | null,
+  seenId: string | null,
+  bubbleShownFor: string | null,
+): boolean {
+  if (!announcement) return false;
+  
+  const priority = getPriority(announcement);
+  
+  // LOW and NORMAL never auto-open
+  if (priority === 'low' || priority === 'normal') return false;
+  
+  // HIGH auto-opens once when first detected
+  if (priority === 'high') {
+    return announcement.id !== seenId && announcement.id !== bubbleShownFor;
+  }
+  
+  // CRITICAL auto-opens until seen
+  if (priority === 'critical') {
+    return announcement.id !== seenId;
+  }
+  
+  return false;
+}
+
 function isAnnouncementAction(value: unknown): value is AnnouncementAction {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
@@ -105,7 +211,7 @@ function isAnnouncement(value: unknown): value is RemoteAnnouncement {
   if (v.publishedAt !== undefined && typeof v.publishedAt !== 'string') return false;
   if (v.primaryImageUrl !== undefined && typeof v.primaryImageUrl !== 'string') return false;
   if (v.type !== undefined && typeof v.type !== 'string') return false;
-  if (v.priority !== undefined && typeof v.priority !== 'number') return false;
+  if (v.priority !== undefined && !VALID_PRIORITIES.includes(v.priority as AnnouncementPriority)) return false;
   if (v.expiresAt !== undefined && typeof v.expiresAt !== 'string') return false;
   
   // Validate actions array if present
@@ -247,12 +353,14 @@ export interface AnnouncementSnapshot {
   shouldPopBubble: boolean;
   /** True iff the button's "unread" indicator dot should be lit. */
   hasUnread: boolean;
+  /** True iff the modal should auto-open (HIGH/CRITICAL priorities). */
+  shouldAutoOpen: boolean;
 }
 
 async function evaluate(payload: RemoteAnnouncementFile | null): Promise<AnnouncementSnapshot> {
   const current = payload?.current ?? null;
   if (!current) {
-    return { current: null, shouldPopBubble: false, hasUnread: false };
+    return { current: null, shouldPopBubble: false, hasUnread: false, shouldAutoOpen: false };
   }
   const [seenId, bubbleShownFor, lastBubbleAt, lastSeenAt] = await Promise.all([
     readFlag(StorageKeys.ANNOUNCEMENT_SEEN_ID),
@@ -260,30 +368,22 @@ async function evaluate(payload: RemoteAnnouncementFile | null): Promise<Announc
     readTimestamp(StorageKeys.ANNOUNCEMENT_LAST_BUBBLE_AT),
     readTimestamp(StorageKeys.ANNOUNCEMENT_LAST_SEEN_AT),
   ]);
-  const now = Date.now();
 
-  // ---- Detection layer (id-based) ----------------------------------
-  const idsSayShouldPop = current.id !== seenId && current.id !== bubbleShownFor;
-  const idsSayHasUnread = current.id !== seenId;
-
-  // ---- HARD GUARDS (timestamp-based, id-agnostic) ------------------
-  // These are absolute ceilings: even if the id-based detection above
-  // says "pop" or "light dot", the timestamp gates can VETO. The
-  // reverse never applies — guards can only suppress, never force.
-  // This makes the user-protection contract robust against any future
-  // detection bug.
-  const bubbleCooldownActive = now - lastBubbleAt < BUBBLE_HARD_COOLDOWN_MS;
-  const dotCooldownActive = now - lastSeenAt < DOT_HARD_COOLDOWN_MS;
+  // Use priority-based helper functions
+  const shouldPopBubble = shouldShowBubble(current, seenId, bubbleShownFor, lastBubbleAt);
+  const hasUnread = shouldShowUnreadDot(current, seenId, lastSeenAt);
+  const shouldAutoOpen = shouldAutoOpenModal(current, seenId, bubbleShownFor);
 
   return {
     current,
-    shouldPopBubble: idsSayShouldPop && !bubbleCooldownActive,
-    hasUnread: idsSayHasUnread && !dotCooldownActive,
+    shouldPopBubble,
+    hasUnread,
+    shouldAutoOpen,
   };
 }
 
 const listeners = new Set<Listener>();
-let lastSnapshot: AnnouncementSnapshot = { current: null, shouldPopBubble: false, hasUnread: false };
+let lastSnapshot: AnnouncementSnapshot = { current: null, shouldPopBubble: false, hasUnread: false, shouldAutoOpen: false };
 let installed = false;
 let pollTimer: number | null = null;
 
@@ -458,7 +558,7 @@ export function installAnnouncementWatchers(onChange: (snapshot: AnnouncementSna
 /** Test-only: reset module state. */
 export function __resetAnnouncementServiceForTests(): void {
   listeners.clear();
-  lastSnapshot = { current: null, shouldPopBubble: false, hasUnread: false };
+  lastSnapshot = { current: null, shouldPopBubble: false, hasUnread: false, shouldAutoOpen: false };
   installed = false;
   if (pollTimer !== null) {
     window.clearInterval(pollTimer);
