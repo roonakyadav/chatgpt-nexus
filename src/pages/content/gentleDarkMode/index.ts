@@ -74,14 +74,14 @@ const THEME_PALETTES: Record<Theme, ThemePalette> = {
     border: '#123243',
   },
   mocha: {
-    mainSurface: '#40342A',
-    elevatedSurface: '#5C4A3A',
-    border: '#B8860B',
+    mainSurface: '#3D2B1F',
+    elevatedSurface: '#4A3828',
+    border: '#8B5A2B',
   },
   champagne: {
-    mainSurface: '#3D362C',
-    elevatedSurface: '#5C4A3A',
-    border: '#B8860B',
+    mainSurface: '#2D2A20',
+    elevatedSurface: '#3D3828',
+    border: '#D4AF37',
   },
 };
 

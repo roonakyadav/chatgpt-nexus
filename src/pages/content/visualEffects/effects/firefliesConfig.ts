@@ -1,14 +1,16 @@
 /**
  * Fireflies Configuration
  * Configuration for Fireflies particle effect using the generic particle engine
+ * Redesigned for a peaceful summer evening atmosphere
  */
 
 import type { ParticleConfig, Particle } from '../particleEngine/types';
 
 const PALETTE = [
-  '#FFF8B0', // Warm yellow
-  '#FFE66D', // Golden yellow
-  '#FFD54A', // Amber
+  '#FFF7AE', // Core - warm pale yellow
+  '#FFE66D', // Glow - golden yellow
+  '#FFD54A', // Outer glow - amber
+  '#FFFDE7', // Occasional brighter - pale cream
 ];
 
 const LAYERS = ['background', 'middle', 'foreground'];
@@ -16,38 +18,49 @@ const LAYERS = ['background', 'middle', 'foreground'];
 export const firefliesConfig: ParticleConfig = {
   particleCount: 45,
   palette: PALETTE,
-  spriteVariants: 3,
+  spriteVariants: 4,
   layers: LAYERS,
+  spriteSize: 48,
   useAdditiveBlending: true,
   
   spawnBehavior: (layer: string, canvasWidth: number, canvasHeight: number, randomY: boolean): Particle => {
-    let size, baseOpacity, wanderSpeed;
+    let size, baseOpacity, wanderSpeed, colorIndex;
 
     switch (layer) {
       case 'background':
-        size = 3 + Math.random() * 2; // 3-5px (small)
-        baseOpacity = 0.3 + Math.random() * 0.15; // 0.3-0.45 (faint)
-        wanderSpeed = 0.2 + Math.random() * 0.3; // Slow
+        size = 6 + Math.random() * 3; // 6-9px (small but visible)
+        baseOpacity = 0.25 + Math.random() * 0.15; // 0.25-0.4 (dim)
+        wanderSpeed = 0.15 + Math.random() * 0.2; // Very slow
+        colorIndex = Math.random() < 0.3 ? 3 : 0; // Occasional brighter
         break;
       case 'middle':
-        size = 5 + Math.random() * 3; // 5-8px (normal)
-        baseOpacity = 0.5 + Math.random() * 0.2; // 0.5-0.7
-        wanderSpeed = 0.3 + Math.random() * 0.4;
+        size = 8 + Math.random() * 3; // 8-11px (normal)
+        baseOpacity = 0.4 + Math.random() * 0.2; // 0.4-0.6
+        wanderSpeed = 0.25 + Math.random() * 0.25;
+        colorIndex = Math.random() < 0.2 ? 3 : Math.floor(Math.random() * 3);
         break;
       case 'foreground':
-        size = 7 + Math.random() * 4; // 7-11px (slightly larger)
-        baseOpacity = 0.6 + Math.random() * 0.25; // 0.6-0.85
-        wanderSpeed = 0.4 + Math.random() * 0.5;
+        size = 10 + Math.random() * 3; // 10-13px (larger)
+        baseOpacity = 0.55 + Math.random() * 0.25; // 0.55-0.8 (bright)
+        wanderSpeed = 0.35 + Math.random() * 0.3; // Slightly faster
+        colorIndex = Math.random() < 0.25 ? 3 : Math.floor(Math.random() * 3);
         break;
       default:
-        size = 5 + Math.random() * 3;
-        baseOpacity = 0.5 + Math.random() * 0.2;
-        wanderSpeed = 0.3 + Math.random() * 0.4;
+        size = 8 + Math.random() * 3;
+        baseOpacity = 0.4 + Math.random() * 0.2;
+        wanderSpeed = 0.25 + Math.random() * 0.25;
+        colorIndex = Math.floor(Math.random() * 3);
     }
 
+    // Curved path movement parameters
     const wanderAngle = Math.random() * Math.PI * 2;
+    const curveAmplitude = 0.5 + Math.random() * 0.5;
+    const curveFrequency = 0.01 + Math.random() * 0.02;
+    const curvePhase = Math.random() * Math.PI * 2;
+    const verticalDrift = (Math.random() - 0.5) * 0.3; // Gentle rise/descend tendency
+    
     const pulsePhase = Math.random() * Math.PI * 2;
-    const pulseSpeed = 0.02 + Math.random() * 0.03;
+    const pulseSpeed = 0.015 + Math.random() * 0.02; // Slower, smoother pulse
 
     return {
       x: Math.random() * canvasWidth,
@@ -59,13 +72,18 @@ export const firefliesConfig: ParticleConfig = {
       rotationSpeed: 0,
       opacity: baseOpacity,
       layer,
-      spriteIndex: Math.floor(Math.random() * 3),
+      spriteIndex: colorIndex,
       pulsePhase,
       pulseSpeed,
       baseOpacity,
       wanderAngle,
       wanderSpeed,
-      pauseTimer: Math.random() * 60, // Random pause start time
+      curveAmplitude,
+      curveFrequency,
+      curvePhase,
+      verticalDrift,
+      pauseTimer: Math.random() * 120, // Random pause start time (longer)
+      pauseDuration: 60 + Math.random() * 90, // Pause duration
     };
   },
 
@@ -76,62 +94,80 @@ export const firefliesConfig: ParticleConfig = {
       return; // Paused, don't move
     }
 
-    // Occasionally pause (every 120-240 frames)
-    if (Math.random() < 0.01) {
-      particle.pauseTimer = 60 + Math.random() * 60;
+    // Occasionally pause (less frequent, longer pauses for calm feel)
+    if (Math.random() < 0.005) {
+      particle.pauseTimer = particle.pauseDuration || 90;
       return;
     }
 
-    // Wandering motion - slowly change direction
-    if (particle.wanderAngle !== undefined) {
-      particle.wanderAngle += (Math.random() - 0.5) * 0.1;
+    // Curved path movement - smooth organic wandering
+    if (particle.wanderAngle !== undefined && particle.curveAmplitude !== undefined && 
+        particle.curveFrequency !== undefined && particle.curvePhase !== undefined) {
       
-      // Occasionally change direction more significantly
-      if (Math.random() < 0.02) {
-        particle.wanderAngle += (Math.random() - 0.5) * 0.5;
+      // Update curve phase for smooth oscillation
+      particle.curvePhase += particle.curveFrequency;
+      
+      // Calculate curved movement
+      const curveOffset = Math.sin(particle.curvePhase) * particle.curveAmplitude;
+      const currentAngle = particle.wanderAngle + curveOffset * 0.5;
+      
+      // Very slowly change base wander angle
+      particle.wanderAngle += (Math.random() - 0.5) * 0.02;
+      
+      // Move based on curved angle
+      if (particle.wanderSpeed !== undefined) {
+        particle.x += Math.cos(currentAngle) * particle.wanderSpeed;
+        particle.y += Math.sin(currentAngle) * particle.wanderSpeed;
+      }
+      
+      // Add gentle vertical drift (rise/descend tendency)
+      if (particle.verticalDrift !== undefined) {
+        particle.y += particle.verticalDrift;
       }
     }
 
-    // Move based on wander angle and speed
-    if (particle.wanderSpeed !== undefined && particle.wanderAngle !== undefined) {
-      particle.x += Math.cos(particle.wanderAngle) * particle.wanderSpeed;
-      particle.y += Math.sin(particle.wanderAngle) * particle.wanderSpeed;
-    }
+    // Wrap around screen with larger margin for glow
+    const margin = 50;
+    if (particle.x < -margin) particle.x = canvasWidth + margin;
+    if (particle.x > canvasWidth + margin) particle.x = -margin;
+    if (particle.y < -margin) particle.y = canvasHeight + margin;
+    if (particle.y > canvasHeight + margin) particle.y = -margin;
 
-    // Occasionally rise or descend
-    if (Math.random() < 0.01) {
-      particle.y += (Math.random() - 0.5) * 2;
-    }
-
-    // Wrap around screen
-    if (particle.x < -20) particle.x = canvasWidth + 20;
-    if (particle.x > canvasWidth + 20) particle.x = -20;
-    if (particle.y < -20) particle.y = canvasHeight + 20;
-    if (particle.y > canvasHeight + 20) particle.y = -20;
-
-    // Twinkling - pulse opacity
+    // Smooth twinkling - pulse opacity with different phases
     if (particle.pulsePhase !== undefined && particle.pulseSpeed !== undefined && particle.baseOpacity !== undefined) {
       particle.pulsePhase += particle.pulseSpeed;
-      const pulse = Math.sin(particle.pulsePhase) * 0.3; // Pulse amplitude
+      // Use cosine for smoother pulse, reduced amplitude for gentler effect
+      const pulse = Math.cos(particle.pulsePhase) * 0.2;
       particle.opacity = particle.baseOpacity + pulse;
       
-      // Clamp opacity
-      particle.opacity = Math.max(0.1, Math.min(1, particle.opacity));
+      // Clamp opacity to maintain visibility
+      particle.opacity = Math.max(0.15, Math.min(1, particle.opacity));
     }
   },
 
   spriteGenerator: (index: number, color: string, ctx: CanvasRenderingContext2D): void => {
-    // Create glow sprite with radial gradient
-    const size = 24;
+    // Create larger glow sprite with multiple gradient layers
+    const size = 48; // Much larger for extended glow
     const centerX = size / 2;
     const centerY = size / 2;
 
-    // Create radial gradient for soft glow
+    // Create multi-layer radial gradient for rich glow effect
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size / 2);
-    gradient.addColorStop(0, color); // Center - bright
-    gradient.addColorStop(0.3, color); // Inner glow
-    gradient.addColorStop(0.6, color + '80'); // Mid glow with transparency
-    gradient.addColorStop(1, 'transparent'); // Outer fade
+    
+    // Core - bright warm center
+    gradient.addColorStop(0, color);
+    
+    // Inner glow - soft halo
+    gradient.addColorStop(0.15, color);
+    
+    // Mid glow - extended soft glow
+    gradient.addColorStop(0.4, color + 'CC');
+    
+    // Outer glow - very soft fade
+    gradient.addColorStop(0.7, color + '66');
+    
+    // Edge fade to transparent
+    gradient.addColorStop(1, 'transparent');
 
     ctx.fillStyle = gradient;
     ctx.beginPath();

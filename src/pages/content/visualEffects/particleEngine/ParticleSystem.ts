@@ -38,15 +38,17 @@ export class ParticleSystem {
   private generateSprites(): void {
     if (this.spriteCache.size() > 0) return; // Already cached
 
+    const spriteSize = this.config.spriteSize || 24;
+
     for (let i = 0; i < this.config.spriteVariants; i++) {
       const color = this.config.palette[i % this.config.palette.length];
       const sprite = document.createElement('canvas');
-      sprite.width = 24;
-      sprite.height = 24;
+      sprite.width = spriteSize;
+      sprite.height = spriteSize;
       const spriteCtx = sprite.getContext('2d');
       if (!spriteCtx) continue;
 
-      spriteCtx.translate(12, 12);
+      spriteCtx.translate(spriteSize / 2, spriteSize / 2);
       this.config.spriteGenerator(i, color, spriteCtx);
 
       this.spriteCache.set(`sprite_${i}`, sprite);

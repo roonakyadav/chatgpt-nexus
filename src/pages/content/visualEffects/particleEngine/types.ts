@@ -27,6 +27,11 @@ export interface Particle {
   wanderAngle?: number;
   wanderSpeed?: number;
   pauseTimer?: number;
+  pauseDuration?: number;
+  curveAmplitude?: number;
+  curveFrequency?: number;
+  curvePhase?: number;
+  verticalDrift?: number;
 }
 
 export interface Splash {
@@ -44,6 +49,7 @@ export interface ParticleConfig {
   palette: string[];
   spriteVariants: number;
   layers: string[];
+  spriteSize?: number;
   spawnBehavior: (layer: string, canvasWidth: number, canvasHeight: number, randomY: boolean) => Particle;
   updateBehavior: (particle: Particle, canvasWidth: number, canvasHeight: number, splashes: Splash[]) => void;
   spriteGenerator: (index: number, color: string, ctx: CanvasRenderingContext2D) => void;

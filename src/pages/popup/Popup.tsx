@@ -934,12 +934,12 @@ export default function Popup() {
                           mocha: {
                             name: 'Mocha',
                             hint: 'Rich coffee browns with warm café highlights.',
-                            colors: ['#40342A', '#B8860B', '#DAA520', '#F0D78C'],
+                            colors: ['#3D2B1F', '#4A3828', '#8B5A2B', '#A0522D'],
                           },
                           champagne: {
                             name: 'Champagne',
                             hint: 'Soft champagne gold with refined luxury accents.',
-                            colors: ['#3D362C', '#B8860B', '#D4AF37', '#F0D78C'],
+                            colors: ['#2D2A20', '#3D3828', '#D4AF37', '#F0D78C'],
                           },
                         };
                         const config = themeConfig[themeValue];
