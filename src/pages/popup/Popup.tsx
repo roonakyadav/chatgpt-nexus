@@ -924,7 +924,7 @@ export default function Popup() {
                           'sunset-amber': {
                             name: 'Sunset Amber',
                             hint: 'Warm amber highlights inspired by golden sunsets.',
-                            colors: ['#7C3A00', '#A85500', '#D97706', '#F59E0B'],
+                            colors: ['#45301A', '#B8860B', '#FF8C00', '#FFA500'],
                           },
                           'deep-ocean': {
                             name: 'Deep Ocean',
@@ -934,17 +934,12 @@ export default function Popup() {
                           mocha: {
                             name: 'Mocha',
                             hint: 'Rich coffee browns with warm café highlights.',
-                            colors: ['#3F2A21', '#5B3A29', '#8B5E3C', '#A16207'],
-                          },
-                          obsidian: {
-                            name: 'Obsidian',
-                            hint: 'Pure AMOLED black with minimalist graphite accents.',
-                            colors: ['#000000', '#101010', '#202020', '#404040'],
+                            colors: ['#40342A', '#B8860B', '#DAA520', '#F0D78C'],
                           },
                           champagne: {
                             name: 'Champagne',
                             hint: 'Soft champagne gold with refined luxury accents.',
-                            colors: ['#6B5A3A', '#92794F', '#B9935A', '#C9A96E'],
+                            colors: ['#3D362C', '#B8860B', '#D4AF37', '#F0D78C'],
                           },
                         };
                         const config = themeConfig[themeValue];

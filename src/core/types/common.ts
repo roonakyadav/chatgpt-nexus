@@ -226,7 +226,6 @@ export type Theme =
   | 'sunset-amber'
   | 'deep-ocean'
   | 'mocha'
-  | 'obsidian'
   | 'champagne';
 
 export const THEMES: readonly Theme[] = [
@@ -239,7 +238,6 @@ export const THEMES: readonly Theme[] = [
   'sunset-amber',
   'deep-ocean',
   'mocha',
-  'obsidian',
   'champagne',
 ] as const;
 

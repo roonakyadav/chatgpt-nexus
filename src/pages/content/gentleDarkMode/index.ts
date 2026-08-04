@@ -24,7 +24,6 @@ type Theme =
   | 'sunset-amber'
   | 'deep-ocean'
   | 'mocha'
-  | 'obsidian'
   | 'champagne';
 
 interface ThemePalette {
@@ -65,9 +64,9 @@ const THEME_PALETTES: Record<Theme, ThemePalette> = {
     border: '#163532',
   },
   'sunset-amber': {
-    mainSurface: '#181109',
-    elevatedSurface: '#24180D',
-    border: '#3A2712',
+    mainSurface: '#45301A',
+    elevatedSurface: '#5C4028',
+    border: '#B8860B',
   },
   'deep-ocean': {
     mainSurface: '#06131A',
@@ -75,19 +74,14 @@ const THEME_PALETTES: Record<Theme, ThemePalette> = {
     border: '#123243',
   },
   mocha: {
-    mainSurface: '#171210',
-    elevatedSurface: '#221A17',
-    border: '#31231F',
-  },
-  obsidian: {
-    mainSurface: '#000000',
-    elevatedSurface: '#080808',
-    border: '#101010',
+    mainSurface: '#40342A',
+    elevatedSurface: '#5C4A3A',
+    border: '#B8860B',
   },
   champagne: {
-    mainSurface: '#161410',
-    elevatedSurface: '#211E18',
-    border: '#322D24',
+    mainSurface: '#3D362C',
+    elevatedSurface: '#5C4A3A',
+    border: '#B8860B',
   },
 };
 
