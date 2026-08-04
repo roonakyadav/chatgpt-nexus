@@ -126,10 +126,13 @@ function ToggleRow({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="border-border/40 border-b pb-6">
-      <h3 className="text-foreground/60 mb-4 text-xs font-bold tracking-widest uppercase">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-foreground/60 text-xs font-bold tracking-widest uppercase">{title}</h3>
+        {action}
+      </div>
       <div className="space-y-3">{children}</div>
     </div>
   );
@@ -334,6 +337,36 @@ export default function Popup() {
   const setSyncStorage = useCallback(async (items: Record<string, unknown>) => {
     await browser.storage.sync.set(items);
   }, []);
+
+  // Check if appearance settings are at defaults
+  const isAtDefaults = useMemo(() => {
+    return theme === 'default' && visualEffect === 'off';
+  }, [theme, visualEffect]);
+
+  const handleResetAppearance = useCallback(async () => {
+    // Reset theme to default
+    setTheme('default');
+    await setSyncStorage({ [StorageKeys.THEME]: 'default' });
+    
+    // Reset visual effect to off
+    setVisualEffect('off');
+    await setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: 'off' });
+    
+    // Notify content script to disable visual effects
+    await browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+      if (tabs[0]?.id) {
+        void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {});
+      }
+    });
+    
+    // Close popup and Prompt Manager
+    window.close();
+    void browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+      if (tabs[0]?.id) {
+        void browser.tabs.sendMessage(tabs[0].id, { type: 'CLOSE_PROMPT_MANAGER' }).catch(() => {});
+      }
+    });
+  }, [setSyncStorage]);
 
   const handleCategoryChange = useCallback(
     (category: PopupCategory) => {
@@ -797,7 +830,25 @@ export default function Popup() {
           <div className="animate-in fade-in slide-in-from-right-4 duration-150 ease-out">
             {selectedCategory === 'general' && (
               <div className="space-y-6">
-                <Section title={t('appearanceOptions')}>
+                <Section 
+                  title={t('appearanceOptions')}
+                  action={
+                    <button
+                      type="button"
+                      onClick={handleResetAppearance}
+                      disabled={isAtDefaults}
+                      className={`
+                        text-xs font-medium px-3 py-1.5 rounded-md border transition-all duration-200
+                        ${isAtDefaults
+                          ? 'border-transparent text-muted-foreground/30 cursor-not-allowed'
+                          : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-accent'
+                        }
+                      `}
+                    >
+                      Reset
+                    </button>
+                  }
+                >
                   <div className="space-y-4">
                     <Label className="text-sm font-medium">Effects</Label>
                     
