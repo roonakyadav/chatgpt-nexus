@@ -218,19 +218,29 @@ export const StorageKeys = {
 
 export type Theme =
   | 'default'
-  | 'gentler-dark'
   | 'forest'
   | 'crimson'
   | 'midnight-blue'
-  | 'graphite';
+  | 'royal-purple'
+  | 'emerald'
+  | 'sunset-amber'
+  | 'deep-ocean'
+  | 'mocha'
+  | 'obsidian'
+  | 'champagne';
 
 export const THEMES: readonly Theme[] = [
   'default',
-  'gentler-dark',
   'forest',
   'crimson',
   'midnight-blue',
-  'graphite',
+  'royal-purple',
+  'emerald',
+  'sunset-amber',
+  'deep-ocean',
+  'mocha',
+  'obsidian',
+  'champagne',
 ] as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

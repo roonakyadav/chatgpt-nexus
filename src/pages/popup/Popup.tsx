@@ -661,14 +661,14 @@ export default function Popup() {
         if (CATEGORIES.includes(storedCategory)) {
           setSelectedCategory(storedCategory);
         }
-        // Migration: if old gentle dark toggle was enabled, migrate to gentler-dark theme
+        // Migration: if old gentle dark toggle was enabled, migrate to default theme
         const storedTheme = result[StorageKeys.THEME] as Theme | undefined;
         if (storedTheme && THEMES.includes(storedTheme)) {
           setTheme(storedTheme);
         } else if (result[StorageKeys.GENTLE_DARK_ENABLED] === true) {
-          setTheme('gentler-dark');
+          setTheme('default');
           // Persist the migrated theme
-          void setSyncStorage({ [StorageKeys.THEME]: 'gentler-dark' });
+          void setSyncStorage({ [StorageKeys.THEME]: 'default' });
           // Clear the old toggle
           void setSyncStorage({ [StorageKeys.GENTLE_DARK_ENABLED]: false });
         } else {
@@ -896,11 +896,6 @@ export default function Popup() {
                             hint: t('themeDefaultHint'),
                             colors: ['#000000', '#1a1a1a', '#2d2d2d', '#404040'],
                           },
-                          'gentler-dark': {
-                            name: t('themeGentlerDark'),
-                            hint: t('themeGentlerDarkHint'),
-                            colors: ['#1f1f1e', '#2c2c2a', '#3d3d3b', '#4a4a48'],
-                          },
                           forest: {
                             name: t('themeForest'),
                             hint: t('themeForestHint'),
@@ -916,10 +911,40 @@ export default function Popup() {
                             hint: t('themeMidnightBlueHint'),
                             colors: ['#1a1e2e', '#2d324a', '#3d425f', '#4a5273'],
                           },
-                          graphite: {
-                            name: t('themeGraphite'),
-                            hint: t('themeGraphiteHint'),
-                            colors: ['#1a1a1a', '#2d2d2d', '#3d3d3d', '#4a4a4a'],
+                          'royal-purple': {
+                            name: 'Royal Purple',
+                            hint: 'Luxurious violet accents with deep royal tones.',
+                            colors: ['#2B2147', '#49316B', '#6B46C1', '#8B5CF6'],
+                          },
+                          emerald: {
+                            name: 'Emerald',
+                            hint: 'Elegant emerald tones with refined teal highlights.',
+                            colors: ['#0B3D3B', '#0F766E', '#14B8A6', '#5EEAD4'],
+                          },
+                          'sunset-amber': {
+                            name: 'Sunset Amber',
+                            hint: 'Warm amber highlights inspired by golden sunsets.',
+                            colors: ['#7C3A00', '#A85500', '#D97706', '#F59E0B'],
+                          },
+                          'deep-ocean': {
+                            name: 'Deep Ocean',
+                            hint: 'Deep ocean blues with cool aquatic accents.',
+                            colors: ['#082F49', '#0F4C75', '#0369A1', '#0EA5E9'],
+                          },
+                          mocha: {
+                            name: 'Mocha',
+                            hint: 'Rich coffee browns with warm café highlights.',
+                            colors: ['#3F2A21', '#5B3A29', '#8B5E3C', '#A16207'],
+                          },
+                          obsidian: {
+                            name: 'Obsidian',
+                            hint: 'Pure AMOLED black with minimalist graphite accents.',
+                            colors: ['#000000', '#101010', '#202020', '#404040'],
+                          },
+                          champagne: {
+                            name: 'Champagne',
+                            hint: 'Soft champagne gold with refined luxury accents.',
+                            colors: ['#6B5A3A', '#92794F', '#B9935A', '#C9A96E'],
                           },
                         };
                         const config = themeConfig[themeValue];

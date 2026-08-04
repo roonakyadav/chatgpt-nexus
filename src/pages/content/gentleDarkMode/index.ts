@@ -1,6 +1,6 @@
 /**
  * Theme system — applies custom color themes to ChatGPT's dark mode.
- * Supports multiple themes: default, gentler-dark, forest, crimson, midnight-blue, graphite.
+ * Supports multiple themes: default, forest, crimson, midnight-blue, royal-purple, emerald, sunset-amber, deep-ocean, mocha, obsidian, champagne.
  *
  * ChatGPT's dark theme drives every surface from CSS custom properties that
  * resolve to pure black (#000): the main chat/page surface, the sidebar, and
@@ -14,7 +14,18 @@ const STYLE_ID = 'gv-theme-style';
 const STORAGE_KEY = 'gvTheme';
 const DEFAULT_THEME = 'default';
 
-type Theme = 'default' | 'gentler-dark' | 'forest' | 'crimson' | 'midnight-blue' | 'graphite';
+type Theme =
+  | 'default'
+  | 'forest'
+  | 'crimson'
+  | 'midnight-blue'
+  | 'royal-purple'
+  | 'emerald'
+  | 'sunset-amber'
+  | 'deep-ocean'
+  | 'mocha'
+  | 'obsidian'
+  | 'champagne';
 
 interface ThemePalette {
   mainSurface: string;
@@ -26,11 +37,6 @@ const THEME_PALETTES: Record<Theme, ThemePalette> = {
   default: {
     mainSurface: '#000000',
     elevatedSurface: '#000000',
-    border: '#3d3d3b',
-  },
-  'gentler-dark': {
-    mainSurface: '#1f1f1e',
-    elevatedSurface: '#2c2c2a',
     border: '#3d3d3b',
   },
   forest: {
@@ -48,10 +54,40 @@ const THEME_PALETTES: Record<Theme, ThemePalette> = {
     elevatedSurface: '#2d324a',
     border: '#3d425f',
   },
-  graphite: {
-    mainSurface: '#1a1a1a',
-    elevatedSurface: '#2d2d2d',
-    border: '#3d3d3d',
+  'royal-purple': {
+    mainSurface: '#0F0B18',
+    elevatedSurface: '#1B1430',
+    border: '#2B2147',
+  },
+  emerald: {
+    mainSurface: '#081312',
+    elevatedSurface: '#10211F',
+    border: '#163532',
+  },
+  'sunset-amber': {
+    mainSurface: '#181109',
+    elevatedSurface: '#24180D',
+    border: '#3A2712',
+  },
+  'deep-ocean': {
+    mainSurface: '#06131A',
+    elevatedSurface: '#0C1E28',
+    border: '#123243',
+  },
+  mocha: {
+    mainSurface: '#171210',
+    elevatedSurface: '#221A17',
+    border: '#31231F',
+  },
+  obsidian: {
+    mainSurface: '#000000',
+    elevatedSurface: '#080808',
+    border: '#101010',
+  },
+  champagne: {
+    mainSurface: '#161410',
+    elevatedSurface: '#211E18',
+    border: '#322D24',
   },
 };
 
