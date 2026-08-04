@@ -33,12 +33,60 @@ export class SakuraScene {
   private animationFrameId: number | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
+  private isPaused = false;
+  private visibilityListener: (() => void) | null = null;
+  private reducedMotionListener: (() => void) | null = null;
+  private isReducedMotion = false;
 
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this.canvas = canvas;
     this.ctx = ctx;
     this.generateSprites();
     this.initParticles();
+    this.checkReducedMotion();
+    this.setupVisibilityListener();
+  }
+
+  private checkReducedMotion(): void {
+    this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    this.reducedMotionListener = () => {
+      this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (this.isReducedMotion && this.animationFrameId !== null) {
+        this.pause();
+      } else if (!this.isReducedMotion && !this.isPaused && this.animationFrameId === null && this.canvas) {
+        this.start();
+      }
+    };
+    
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', this.reducedMotionListener);
+  }
+
+  private setupVisibilityListener(): void {
+    this.visibilityListener = () => {
+      if (document.hidden) {
+        this.pause();
+      } else {
+        this.resume();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', this.visibilityListener);
+  }
+
+  private pause(): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+      this.isPaused = true;
+    }
+  }
+
+  private resume(): void {
+    if (this.isPaused && !this.isReducedMotion) {
+      this.isPaused = false;
+      this.animate();
+    }
   }
 
   private generateSprites(): void {
@@ -237,16 +285,32 @@ export class SakuraScene {
   }
 
   start(): void {
+    if (this.isReducedMotion) {
+      return; // Don't start if reduced motion is enabled
+    }
     if (this.animationFrameId !== null) {
       return;
     }
+    this.isPaused = false;
     this.animate();
   }
 
   stop(): void {
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
+    this.pause();
+    this.cleanup();
+  }
+
+  private cleanup(): void {
+    // Remove visibility listener
+    if (this.visibilityListener) {
+      document.removeEventListener('visibilitychange', this.visibilityListener);
+      this.visibilityListener = null;
+    }
+    
+    // Remove reduced motion listener
+    if (this.reducedMotionListener) {
+      window.matchMedia('(prefers-reduced-motion: reduce)').removeEventListener('change', this.reducedMotionListener);
+      this.reducedMotionListener = null;
     }
   }
 
