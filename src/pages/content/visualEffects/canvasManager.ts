@@ -35,10 +35,17 @@ class CanvasManager {
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.style.pointerEvents = 'none';
-    canvas.style.zIndex = '2147483647'; // Maximum z-index
+    canvas.style.zIndex = '0'; // Low z-index to place behind content
     canvas.style.background = 'transparent';
 
-    document.body.appendChild(canvas);
+    // Insert canvas at the beginning of body to place it behind other content
+    // This ensures it's above the body background but behind ChatGPT's main content
+    if (document.body.firstChild) {
+      document.body.insertBefore(canvas, document.body.firstChild);
+    } else {
+      document.body.appendChild(canvas);
+    }
+
     this.canvas = canvas;
 
     // Set canvas size to match window
