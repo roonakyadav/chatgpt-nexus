@@ -64,7 +64,7 @@ export const sakuraConfig: ParticleConfig = {
     };
   },
 
-  updateBehavior: (particle: Particle, canvasWidth: number, canvasHeight: number): void => {
+  updateBehavior: (particle: Particle, canvasWidth: number, canvasHeight: number, _splashes: any[]): void => {
     // Update position
     particle.y += particle.speedY;
 

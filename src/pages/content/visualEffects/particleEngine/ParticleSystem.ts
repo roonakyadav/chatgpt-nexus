@@ -3,11 +3,12 @@
  * Generic particle animation system for visual effects
  */
 
-import type { Particle, ParticleConfig, SpriteCache } from './types';
+import type { Particle, ParticleConfig, SpriteCache, Splash } from './types';
 import { EffectLifecycle } from './EffectLifecycle';
 
 export class ParticleSystem {
   private particles: Particle[] = [];
+  private splashes: Splash[] = [];
   private animationFrameId: number | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -73,6 +74,13 @@ export class ParticleSystem {
   private drawParticle(particle: Particle): void {
     if (!this.ctx) return;
 
+    // Use custom render behavior if provided (for line rendering)
+    if (this.config.renderBehavior && particle.isLine) {
+      const color = this.config.palette[particle.spriteIndex % this.config.palette.length];
+      this.config.renderBehavior(this.ctx, particle, color);
+      return;
+    }
+
     const sprite = this.spriteCache.get(`sprite_${particle.spriteIndex}`);
     if (!sprite) return;
 
@@ -87,14 +95,49 @@ export class ParticleSystem {
     ctx.restore();
   }
 
+  private drawSplash(splash: Splash): void {
+    if (!this.ctx) return;
+
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = splash.opacity;
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+    ctx.arc(splash.x, splash.y, splash.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  private updateSplashes(): void {
+    for (let i = this.splashes.length - 1; i >= 0; i--) {
+      const splash = this.splashes[i];
+      splash.life--;
+      splash.radius += 0.3;
+      splash.opacity = splash.life / splash.maxLife;
+
+      if (splash.life <= 0) {
+        this.splashes.splice(i, 1);
+      }
+    }
+  }
+
   private render(): void {
     if (!this.ctx || !this.canvas) return;
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    this.updateSplashes();
+
     for (const particle of this.particles) {
-      this.config.updateBehavior(particle, this.canvas.width, this.canvas.height);
+      this.config.updateBehavior(particle, this.canvas.width, this.canvas.height, this.splashes);
       this.drawParticle(particle);
+    }
+
+    for (const splash of this.splashes) {
+      this.drawSplash(splash);
     }
   }
 

@@ -828,7 +828,7 @@ export default function Popup() {
                     
                     {/* Available Effects */}
                     <div className="grid grid-cols-2 gap-3">
-                      {['sakura', 'snow'].map((effectValue) => {
+                      {['sakura', 'snow', 'rain'].map((effectValue) => {
                         const config = VISUAL_EFFECT_CONFIGS[effectValue as VisualEffect];
                         const isSelected = visualEffect === effectValue;
                         const [isHovering, setIsHovering] = useState(false);
@@ -898,7 +898,7 @@ export default function Popup() {
                                 setVisualEffect(effectValue as VisualEffect);
                                 await setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effectValue });
                                 // Notify content script to initialize visual effects
-                                if (effectValue === 'sakura' || effectValue === 'snow') {
+                                if (effectValue === 'sakura' || effectValue === 'snow' || effectValue === 'rain') {
                                   await browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
                                     if (tabs[0]?.id) {
                                       void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {
