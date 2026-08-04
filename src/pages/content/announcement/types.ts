@@ -39,6 +39,46 @@ export interface RemoteAnnouncement {
    * under the support repo's `support-assets/` folder).
    */
   primaryImageUrl?: string;
+  /**
+   * Optional announcement type for categorization and styling.
+   * Examples: 'info', 'warning', 'feature', 'maintenance', 'urgent'
+   */
+  type?: string;
+  /**
+   * Optional priority level for sorting or display logic.
+   * Higher values indicate higher priority. Typical range: 1-5.
+   */
+  priority?: number;
+  /**
+   * Optional array of action buttons to display in the modal.
+   * Each action can have a label, URL, and optional styling hints.
+   */
+  actions?: AnnouncementAction[];
+  /**
+   * Optional ISO 8601 timestamp when this announcement should expire.
+   * After this time, the announcement should not be shown even if
+   * the user hasn't seen it yet.
+   */
+  expiresAt?: string;
+}
+
+/**
+ * Action button configuration for announcement modals.
+ */
+export interface AnnouncementAction {
+  /** Button label text. */
+  label: string;
+  /** URL to open when button is clicked. */
+  url: string;
+  /**
+   * Optional button style variant.
+   * Examples: 'primary', 'secondary', 'danger'
+   */
+  style?: string;
+  /**
+   * Optional flag to open URL in new tab (default: true).
+   */
+  openInNewTab?: boolean;
 }
 
 export interface RemoteAnnouncementFile {

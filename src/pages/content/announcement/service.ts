@@ -19,6 +19,7 @@ import { ANNOUNCEMENT_JSON_URL } from '@/core/constants/project';
 import { StorageKeys } from '@/core/types/common';
 
 import type {
+  AnnouncementAction,
   AnnouncementCacheEntry,
   RemoteAnnouncement,
   RemoteAnnouncementFile,
@@ -71,16 +72,51 @@ const CDN_BUST_WINDOW_MS = 5 * 60 * 1000;
 
 type Listener = (current: RemoteAnnouncement | null) => void;
 
-function isAnnouncement(value: unknown): value is RemoteAnnouncement {
+function isAnnouncementAction(value: unknown): value is AnnouncementAction {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.id === 'string' &&
-    v.id.length > 0 &&
-    typeof v.title === 'string' &&
-    typeof v.summary === 'string' &&
-    typeof v.bodyMarkdown === 'string'
+    typeof v.label === 'string' &&
+    v.label.length > 0 &&
+    typeof v.url === 'string' &&
+    v.url.length > 0 &&
+    (v.style === undefined || typeof v.style === 'string') &&
+    (v.openInNewTab === undefined || typeof v.openInNewTab === 'boolean')
   );
+}
+
+function isAnnouncement(value: unknown): value is RemoteAnnouncement {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  
+  // Validate required fields
+  if (
+    typeof v.id !== 'string' ||
+    v.id.length === 0 ||
+    typeof v.title !== 'string' ||
+    typeof v.summary !== 'string' ||
+    typeof v.bodyMarkdown !== 'string'
+  ) {
+    return false;
+  }
+  
+  // Validate optional fields if present
+  if (v.version !== undefined && typeof v.version !== 'string') return false;
+  if (v.publishedAt !== undefined && typeof v.publishedAt !== 'string') return false;
+  if (v.primaryImageUrl !== undefined && typeof v.primaryImageUrl !== 'string') return false;
+  if (v.type !== undefined && typeof v.type !== 'string') return false;
+  if (v.priority !== undefined && typeof v.priority !== 'number') return false;
+  if (v.expiresAt !== undefined && typeof v.expiresAt !== 'string') return false;
+  
+  // Validate actions array if present
+  if (v.actions !== undefined) {
+    if (!Array.isArray(v.actions)) return false;
+    for (const action of v.actions) {
+      if (!isAnnouncementAction(action)) return false;
+    }
+  }
+  
+  return true;
 }
 
 function isAnnouncementFile(value: unknown): value is RemoteAnnouncementFile {
