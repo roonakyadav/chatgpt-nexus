@@ -1,14 +1,16 @@
 /**
- * Sakura Visual Effect (Placeholder)
- * Placeholder implementation that draws a pink circle to verify rendering pipeline
+ * Sakura Visual Effect
+ * Cherry blossom petal animation using particle simulation
  */
 
 import { canvasManager } from '../canvasManager';
+import { SakuraScene } from './sakuraScene';
 import type { VisualEffect } from '../types';
 
 class SakuraEffect implements VisualEffect {
   id = 'sakura';
   private isEnabled = false;
+  private scene: SakuraScene | null = null;
   private resizeListener: (() => void) | null = null;
 
   enable(): void {
@@ -27,23 +29,24 @@ class SakuraEffect implements VisualEffect {
         return;
       }
 
-      // Draw pink circle in center
-      this.drawCircle(ctx, canvas);
+      // Create scene
+      this.scene = new SakuraScene(canvas, ctx);
+      this.scene.start();
 
-      // Setup resize listener to redraw on resize
+      // Setup resize listener
       this.resizeListener = () => {
-        if (this.isEnabled && canvasManager.hasCanvas()) {
+        if (this.isEnabled && canvasManager.hasCanvas() && this.scene) {
           const resizedCanvas = canvasManager.createCanvas();
           const resizedCtx = canvasManager.getContext();
           if (resizedCtx) {
-            this.drawCircle(resizedCtx, resizedCanvas);
+            this.scene.resize(resizedCanvas.width, resizedCanvas.height);
           }
         }
       };
       window.addEventListener('resize', this.resizeListener);
 
       this.isEnabled = true;
-      console.warn('[SakuraEffect] Sakura enabled - pink circle drawn');
+      console.warn('[SakuraEffect] Sakura enabled - petal animation started');
     } catch (error) {
       console.error('[SakuraEffect] Failed to enable:', error);
     }
@@ -56,6 +59,12 @@ class SakuraEffect implements VisualEffect {
     }
 
     try {
+      // Stop animation
+      if (this.scene) {
+        this.scene.stop();
+        this.scene = null;
+      }
+
       // Remove resize listener
       if (this.resizeListener) {
         window.removeEventListener('resize', this.resizeListener);
@@ -66,25 +75,10 @@ class SakuraEffect implements VisualEffect {
       canvasManager.destroyCanvas();
 
       this.isEnabled = false;
-      console.warn('[SakuraEffect] Sakura disabled - canvas removed');
+      console.warn('[SakuraEffect] Sakura disabled - animation stopped');
     } catch (error) {
       console.error('[SakuraEffect] Failed to disable:', error);
     }
-  }
-
-  private drawCircle(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw pink circle in center
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 4;
-
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFB7C5'; // Pink color
-    ctx.fill();
   }
 }
 
