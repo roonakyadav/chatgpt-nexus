@@ -55,6 +55,9 @@ export class NightSkyScene {
   private shootingStarTimer = 0;
   private shootingStarInterval = 1500 + Math.random() * 2100; // 25-60 seconds at 60fps
   
+  // Cluster centers for natural distribution
+  private clusterCenters: Array<{ x: number; y: number }> = [];
+  
   // Atmospheric glow gradients (cached)
   private glowGradients: CanvasGradient[] = [];
   
@@ -67,6 +70,59 @@ export class NightSkyScene {
     this.initializeSprites();
     this.initializeStars();
     this.initializeAtmosphericGlow();
+  }
+  
+  private initializeAtmosphericGlow(): void {
+    // Create cached gradients for atmospheric glow
+    const gradient1 = this.ctx.createRadialGradient(
+      this.width * 0.3, this.height * 0.4, 0,
+      this.width * 0.3, this.height * 0.4, this.width * 0.6
+    );
+    gradient1.addColorStop(0, 'rgba(10, 15, 40, 0.08)'); // Very dark navy
+    gradient1.addColorStop(0.5, 'rgba(15, 20, 50, 0.05)');
+    gradient1.addColorStop(1, 'transparent');
+    
+    const gradient2 = this.ctx.createRadialGradient(
+      this.width * 0.7, this.height * 0.6, 0,
+      this.width * 0.7, this.height * 0.6, this.width * 0.5
+    );
+    gradient2.addColorStop(0, 'rgba(20, 25, 60, 0.06)'); // Very dark indigo
+    gradient2.addColorStop(0.5, 'rgba(25, 30, 65, 0.04)');
+    gradient2.addColorStop(1, 'transparent');
+    
+    this.glowGradients = [gradient1, gradient2];
+    
+    // Generate cluster centers for natural distribution
+    this.clusterCenters = [];
+    for (let i = 0; i < 6; i++) {
+      this.clusterCenters.push({
+        x: 100 + Math.random() * (this.width - 200),
+        y: 100 + Math.random() * (this.height - 200),
+      });
+    }
+  }
+  
+  private getClusteredPosition(): { x: number; y: number } {
+    // 65% chance to be near a cluster, 35% random
+    if (Math.random() < 0.65 && this.clusterCenters.length > 0) {
+      const cluster = this.clusterCenters[Math.floor(Math.random() * this.clusterCenters.length)];
+      const spread = 120 + Math.random() * 80; // Spread around cluster
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * spread;
+      let x = cluster.x + Math.cos(angle) * distance;
+      let y = cluster.y + Math.sin(angle) * distance;
+      
+      // Keep within bounds
+      x = Math.max(20, Math.min(this.width - 20, x));
+      y = Math.max(20, Math.min(this.height - 20, y));
+      return { x, y };
+    }
+    
+    // Random position for remaining stars
+    return {
+      x: 20 + Math.random() * (this.width - 40),
+      y: 20 + Math.random() * (this.height - 40),
+    };
   }
   
   start(): void {
@@ -111,7 +167,7 @@ export class NightSkyScene {
   }
   
   private createSparkleSprite(variant: number): HTMLCanvasElement {
-    const size = 60;
+    const size = 50;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -119,12 +175,13 @@ export class NightSkyScene {
     const centerX = size / 2;
     const centerY = size / 2;
     
-    // Soft bloom
+    // Premium soft glow - primary visual feature
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size / 2);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-    gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.6)');
-    gradient.addColorStop(0.35, 'rgba(255, 255, 255, 0.2)');
-    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.05)');
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.4)');
+    gradient.addColorStop(0.45, 'rgba(255, 255, 255, 0.15)');
+    gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.05)');
     gradient.addColorStop(1, 'transparent');
     
     ctx.fillStyle = gradient;
@@ -132,23 +189,23 @@ export class NightSkyScene {
     ctx.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
     ctx.fill();
     
-    // Four-point sparkle with variant-specific beam lengths
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.lineWidth = 2;
+    // Subtle inner sparkle - NOT a cross shape
+    // Just a small bright center with very subtle rays
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.beginPath();
-    
-    const beamLength = 10 + variant * 4; // 10, 14, 18
-    ctx.moveTo(centerX - beamLength, centerY);
-    ctx.lineTo(centerX + beamLength, centerY);
-    ctx.moveTo(centerX, centerY - beamLength);
-    ctx.lineTo(centerX, centerY + beamLength);
-    ctx.stroke();
-    
-    // Center bright point
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 2.5, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Very subtle hint of sparkle (tiny rays, not cross)
+    const rayLength = 4 + variant * 1.5; // 4, 5.5, 7
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX - rayLength, centerY);
+    ctx.lineTo(centerX + rayLength, centerY);
+    ctx.moveTo(centerX, centerY - rayLength);
+    ctx.lineTo(centerX, centerY + rayLength);
+    ctx.stroke();
     
     return canvas;
   }
@@ -175,39 +232,19 @@ export class NightSkyScene {
     return canvas;
   }
   
-  private initializeAtmosphericGlow(): void {
-    // Create cached gradients for atmospheric glow
-    const gradient1 = this.ctx.createRadialGradient(
-      this.width * 0.3, this.height * 0.4, 0,
-      this.width * 0.3, this.height * 0.4, this.width * 0.6
-    );
-    gradient1.addColorStop(0, 'rgba(10, 15, 40, 0.08)'); // Very dark navy
-    gradient1.addColorStop(0.5, 'rgba(15, 20, 50, 0.05)');
-    gradient1.addColorStop(1, 'transparent');
-    
-    const gradient2 = this.ctx.createRadialGradient(
-      this.width * 0.7, this.height * 0.6, 0,
-      this.width * 0.7, this.height * 0.6, this.width * 0.5
-    );
-    gradient2.addColorStop(0, 'rgba(20, 25, 60, 0.06)'); // Very dark indigo
-    gradient2.addColorStop(0.5, 'rgba(25, 30, 65, 0.04)');
-    gradient2.addColorStop(1, 'transparent');
-    
-    this.glowGradients = [gradient1, gradient2];
-  }
-  
   private initializeStars(): void {
     // Layer 2: Background stars (250-350, tiny, dim, no glow)
     const bgCount = 250 + Math.floor(Math.random() * 100);
     for (let i = 0; i < bgCount; i++) {
+      const pos = this.getClusteredPosition();
       this.backgroundStars.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
+        x: pos.x,
+        y: pos.y,
         size: 1 + Math.random() * 0.5,
         opacity: 0.2 + Math.random() * 0.15,
         baseOpacity: 0.2 + Math.random() * 0.15,
         twinklePhase: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.002 + Math.random() * 0.003,
+        twinkleSpeed: 0.003 + Math.random() * 0.005, // Increased for visible twinkle
         minBrightness: 0.15,
         maxBrightness: 0.35,
         rotation: 0,
@@ -220,16 +257,17 @@ export class NightSkyScene {
     // Layer 3: Medium stars (80-120, 2-4px, gentle twinkle, small bloom)
     const medCount = 80 + Math.floor(Math.random() * 40);
     for (let i = 0; i < medCount; i++) {
+      const pos = this.getClusteredPosition();
       this.mediumStars.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
+        x: pos.x,
+        y: pos.y,
         size: 2 + Math.random() * 2,
         opacity: 0.4 + Math.random() * 0.2,
         baseOpacity: 0.4 + Math.random() * 0.2,
         twinklePhase: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.008 + Math.random() * 0.012,
+        twinkleSpeed: 0.008 + Math.random() * 0.015,
         minBrightness: 0.3,
-        maxBrightness: 0.6,
+        maxBrightness: 0.65,
         rotation: 0,
         rotationSpeed: 0,
         layer: 'medium',
@@ -240,18 +278,19 @@ export class NightSkyScene {
     // Layer 4: Hero stars (15-20, sparkle sprites, rotation, independent twinkle)
     const heroCount = 15 + Math.floor(Math.random() * 5);
     for (let i = 0; i < heroCount; i++) {
+      const pos = this.getClusteredPosition();
       this.heroStars.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
-        size: 8 + Math.random() * 4,
+        x: pos.x,
+        y: pos.y,
+        size: 4 + Math.random() * 2, // Reduced to 4-6px
         opacity: 0.7 + Math.random() * 0.2,
         baseOpacity: 0.7 + Math.random() * 0.2,
         twinklePhase: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.02 + Math.random() * 0.03,
-        minBrightness: 0.5,
+        twinkleSpeed: 0.015 + Math.random() * 0.025,
+        minBrightness: 0.55,
         maxBrightness: 0.95,
         rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (Math.random() - 0.5) * 0.01,
+        rotationSpeed: (Math.random() - 0.5) * 0.005, // Slower rotation
         layer: 'hero',
         spriteIndex: Math.floor(Math.random() * 3),
       });
@@ -440,8 +479,8 @@ export class NightSkyScene {
         sprite,
         -sprite.width / 2,
         -sprite.height / 2,
-        sprite.width * star.size / 10,
-        sprite.height * star.size / 10
+        sprite.width * star.size / 5, // Adjusted for 4-6px size
+        sprite.height * star.size / 5
       );
       this.ctx.restore();
     }
