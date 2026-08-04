@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { PROJECT_REPOSITORY_URL } from '@/core/constants/project';
 import { StorageKeys, type Theme, THEMES } from '@/core/types/common';
-import { type VisualEffect, VISUAL_EFFECT_CONFIGS } from '@/core/visualEffects';
+import { type VisualEffect, VISUAL_EFFECT_CONFIGS, COMING_SOON_EFFECTS } from '@/core/visualEffects';
 
 type PopupCategory =
   | 'general'
@@ -823,23 +823,70 @@ export default function Popup() {
                   </div>
                 </Section>
                 <Section title="Visual Effects">
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label className="text-sm font-medium">Effects</Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    
+                    {/* Available Effects */}
+                    <div className="grid grid-cols-2 gap-3">
                       {['sakura'].map((effectValue) => {
                         const config = VISUAL_EFFECT_CONFIGS[effectValue as VisualEffect];
                         const isSelected = visualEffect === effectValue;
+                        const [isHovering, setIsHovering] = useState(false);
+                        const [isPreviewing, setIsPreviewing] = useState(false);
+                        const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+                        const previousSelectionRef = useRef<VisualEffect | null>(null);
+
+                        const handleMouseEnter = () => {
+                          setIsHovering(true);
+                          if (!isPreviewing && !isSelected) {
+                            previousSelectionRef.current = visualEffect;
+                            previewTimeoutRef.current = setTimeout(() => {
+                              setIsPreviewing(true);
+                              // Temporarily set the effect for preview
+                              void setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effectValue });
+                              void browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+                                if (tabs[0]?.id) {
+                                  void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {});
+                                }
+                              });
+                            }, 500);
+                          }
+                        };
+
+                        const handleMouseLeave = () => {
+                          setIsHovering(false);
+                          if (previewTimeoutRef.current) {
+                            clearTimeout(previewTimeoutRef.current);
+                            previewTimeoutRef.current = null;
+                          }
+                          if (isPreviewing) {
+                            setIsPreviewing(false);
+                            // Restore previous selection
+                            const previous = previousSelectionRef.current;
+                            if (previous) {
+                              void setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: previous });
+                              void browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+                                if (tabs[0]?.id) {
+                                  void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {});
+                                }
+                              });
+                            }
+                          }
+                        };
+
                         return (
                           <label
                             key={effectValue}
                             className={`
-                              relative cursor-pointer rounded-lg border-2 p-3 transition-all duration-200
+                              relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300
                               ${isSelected 
-                                ? 'border-primary/50 shadow-[0_0_12px_rgba(var(--primary),0.3)]' 
-                                : 'border-border/60 hover:border-border hover:shadow-md'
+                                ? 'border-primary/60 shadow-[0_0_20px_rgba(var(--primary),0.4)] bg-primary/5' 
+                                : 'border-border/50 hover:border-border hover:shadow-lg bg-card'
                               }
                             `}
                             htmlFor={`effect-${effectValue}`}
+                            onMouseEnter={handleMouseEnter}
+                            onMouseLeave={handleMouseLeave}
                           >
                             <input
                               id={`effect-${effectValue}`}
@@ -863,20 +910,78 @@ export default function Popup() {
                               }}
                               className="sr-only"
                             />
+                            
+                            {/* Active Badge */}
                             {isSelected && (
-                              <span className="absolute right-2 top-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
-                                {t('active')}
+                              <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm">
+                                Active
                               </span>
                             )}
-                            <div className="flex flex-col gap-2">
+
+                            {/* Preview Badge */}
+                            {isPreviewing && !isSelected && (
+                              <span className="absolute right-2 top-2 rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm animate-pulse">
+                                Preview
+                              </span>
+                            )}
+
+                            {/* Thumbnail / Emoji */}
+                            <div className="mb-3 flex h-16 items-center justify-center rounded-lg bg-muted/30 text-4xl">
+                              {config.emoji}
+                            </div>
+
+                            {/* Effect Info */}
+                            <div className="flex flex-col gap-1.5">
                               <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">{config.emoji} {config.name}</span>
+                                <span className="text-sm font-semibold">{config.name}</span>
                               </div>
-                              <p className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">{config.description}</p>
+                              <p className="text-muted-foreground line-clamp-2 text-[11px] leading-snug">{config.description}</p>
+                              
+                              {/* Metadata */}
+                              <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span className={`rounded px-1.5 py-0.5 ${
+                                  config.performanceCost === 'low' ? 'bg-green-500/10 text-green-600 dark:text-green-400' :
+                                  config.performanceCost === 'medium' ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' :
+                                  'bg-red-500/10 text-red-600 dark:text-red-400'
+                                }`}>
+                                  {config.performanceCost} impact
+                                </span>
+                                {config.supportsLightTheme && config.supportsDarkTheme && (
+                                  <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-blue-600 dark:text-blue-400">
+                                    All themes
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </label>
                         );
                       })}
+                    </div>
+
+                    {/* Coming Soon Effects */}
+                    <div className="mt-4">
+                      <Label className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Coming Soon</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {COMING_SOON_EFFECTS.map((effect) => (
+                          <div
+                            key={effect.id}
+                            className="rounded-xl border border-dashed border-border/50 p-4 opacity-60 transition-all hover:opacity-100"
+                          >
+                            <div className="mb-3 flex h-16 items-center justify-center rounded-lg bg-muted/20 text-4xl grayscale">
+                              {effect.emoji}
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-muted-foreground">{effect.name}</span>
+                                <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
+                                  Soon
+                                </span>
+                              </div>
+                              <p className="text-muted-foreground text-[10px]">Coming in future update</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </Section>
