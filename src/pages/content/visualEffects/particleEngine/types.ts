@@ -20,6 +20,13 @@ export interface Particle {
   splashActive?: boolean;
   splashLife?: number;
   splashRadius?: number;
+  // Optional firefly-specific properties
+  pulsePhase?: number;
+  pulseSpeed?: number;
+  baseOpacity?: number;
+  wanderAngle?: number;
+  wanderSpeed?: number;
+  pauseTimer?: number;
 }
 
 export interface Splash {
@@ -42,6 +49,7 @@ export interface ParticleConfig {
   spriteGenerator: (index: number, color: string, ctx: CanvasRenderingContext2D) => void;
   renderBehavior?: (ctx: CanvasRenderingContext2D, particle: Particle, color: string) => void;
   useLineRendering?: boolean;
+  useAdditiveBlending?: boolean;
 }
 
 export interface SpriteCache {

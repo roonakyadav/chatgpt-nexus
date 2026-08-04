@@ -3,9 +3,9 @@
  * Scalable architecture for adding new visual effects
  */
 
-export type VisualEffect = 'off' | 'sakura' | 'snow' | 'rain';
+export type VisualEffect = 'off' | 'sakura' | 'snow' | 'rain' | 'fireflies';
 
-export const VISUAL_EFFECTS: readonly VisualEffect[] = ['off', 'sakura', 'snow', 'rain'] as const;
+export const VISUAL_EFFECTS: readonly VisualEffect[] = ['off', 'sakura', 'snow', 'rain', 'fireflies'] as const;
 
 export type PerformanceCost = 'low' | 'medium' | 'high';
 
@@ -57,6 +57,15 @@ export const VISUAL_EFFECT_CONFIGS: Record<VisualEffect, VisualEffectConfig> = {
     supportsLightTheme: true,
     supportsDarkTheme: true,
   },
+  fireflies: {
+    id: 'fireflies',
+    name: 'Fireflies',
+    description: 'Gentle glowing lights drifting through the night',
+    emoji: '✨',
+    performanceCost: 'low',
+    supportsLightTheme: true,
+    supportsDarkTheme: true,
+  },
 };
 
 // Future effects (coming soon)
@@ -66,7 +75,4 @@ export interface ComingSoonEffect {
   emoji: string;
 }
 
-export const COMING_SOON_EFFECTS: ComingSoonEffect[] = [
-  { id: 'fireflies', name: 'Fireflies', emoji: '✨' },
-  { id: 'autumn-leaves', name: 'Autumn Leaves', emoji: '🍂' },
-];
+export const COMING_SOON_EFFECTS: ComingSoonEffect[] = [];

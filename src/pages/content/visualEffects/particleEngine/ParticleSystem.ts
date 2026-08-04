@@ -129,6 +129,11 @@ export class ParticleSystem {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    // Set additive blending if configured
+    if (this.config.useAdditiveBlending) {
+      this.ctx.globalCompositeOperation = 'lighter';
+    }
+
     this.updateSplashes();
 
     for (const particle of this.particles) {
@@ -138,6 +143,11 @@ export class ParticleSystem {
 
     for (const splash of this.splashes) {
       this.drawSplash(splash);
+    }
+
+    // Reset composite operation
+    if (this.config.useAdditiveBlending) {
+      this.ctx.globalCompositeOperation = 'source-over';
     }
   }
 

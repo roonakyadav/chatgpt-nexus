@@ -828,7 +828,7 @@ export default function Popup() {
                     
                     {/* Available Effects */}
                     <div className="grid grid-cols-2 gap-3">
-                      {['sakura', 'snow', 'rain'].map((effectValue) => {
+                      {['sakura', 'snow', 'rain', 'fireflies'].map((effectValue) => {
                         const config = VISUAL_EFFECT_CONFIGS[effectValue as VisualEffect];
                         const isSelected = visualEffect === effectValue;
                         const [isHovering, setIsHovering] = useState(false);
@@ -898,7 +898,7 @@ export default function Popup() {
                                 setVisualEffect(effectValue as VisualEffect);
                                 await setSyncStorage({ [StorageKeys.GV_VISUAL_EFFECT]: effectValue });
                                 // Notify content script to initialize visual effects
-                                if (effectValue === 'sakura' || effectValue === 'snow' || effectValue === 'rain') {
+                                if (effectValue === 'sakura' || effectValue === 'snow' || effectValue === 'rain' || effectValue === 'fireflies') {
                                   await browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
                                     if (tabs[0]?.id) {
                                       void browser.tabs.sendMessage(tabs[0].id, { type: 'INITIALIZE_VISUAL_EFFECTS' }).catch(() => {
@@ -956,32 +956,6 @@ export default function Popup() {
                           </label>
                         );
                       })}
-                    </div>
-
-                    {/* Coming Soon Effects */}
-                    <div className="mt-4">
-                      <Label className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Coming Soon</Label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {COMING_SOON_EFFECTS.map((effect) => (
-                          <div
-                            key={effect.id}
-                            className="rounded-xl border border-dashed border-border/50 p-4 opacity-60 transition-all hover:opacity-100"
-                          >
-                            <div className="mb-3 flex h-16 items-center justify-center rounded-lg bg-muted/20 text-4xl grayscale">
-                              {effect.emoji}
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-semibold text-muted-foreground">{effect.name}</span>
-                                <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
-                                  Soon
-                                </span>
-                              </div>
-                              <p className="text-muted-foreground text-[10px]">Coming in future update</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 </Section>
