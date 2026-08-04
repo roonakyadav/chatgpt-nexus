@@ -12,6 +12,7 @@ import { StorageKeys } from '@/core/types/common';
 import { VisualEffectsManager } from './manager';
 import { VisualEffectsRegistry } from './registry';
 import { sakuraEffect } from './effects/sakura';
+import { snowEffect } from './effects/snow';
 
 let managerInstance: VisualEffectsManager | null = null;
 let registryInstance: VisualEffectsRegistry | null = null;
@@ -30,6 +31,7 @@ async function initializeFullSystem(): Promise<void> {
     if (!registryInstance) {
       registryInstance = new VisualEffectsRegistry();
       registryInstance.register(sakuraEffect);
+      registryInstance.register(snowEffect);
     }
 
     // Create and initialize manager
@@ -57,7 +59,7 @@ function destroyFullSystem(): void {
 }
 
 /**
- * Setup storage listener for Sakura changes
+ * Setup storage listener for visual effects changes
  */
 function setupStorageListener(): void {
   if (storageListener) return; // Already setup
@@ -71,14 +73,19 @@ function setupStorageListener(): void {
     const newValue = change.newValue as string | undefined;
     const oldValue = change.oldValue as string | undefined;
 
-    // If Sakura is being enabled, initialize the full system
-    if (newValue === 'sakura' && oldValue !== 'sakura') {
+    // If Sakura or Snow is being enabled, initialize the full system
+    if ((newValue === 'sakura' || newValue === 'snow') && oldValue !== 'off') {
       void initializeFullSystem();
     }
 
-    // If Sakura is being disabled and system is initialized, destroy it
-    if (newValue !== 'sakura' && oldValue === 'sakura' && managerInstance) {
+    // If Sakura or Snow is being disabled and system is initialized, destroy it
+    if (newValue === 'off' && (oldValue === 'sakura' || oldValue === 'snow') && managerInstance) {
       destroyFullSystem();
+    }
+
+    // If switching between effects, the manager will handle the transition
+    if ((newValue === 'sakura' || newValue === 'snow') && (oldValue === 'sakura' || oldValue === 'snow') && newValue !== oldValue) {
+      // Manager will handle the switch via its storage listener
     }
   };
 
@@ -86,13 +93,13 @@ function setupStorageListener(): void {
 }
 
 /**
- * Check if Sakura is currently enabled
+ * Check if any visual effect is currently enabled
  */
-async function isSakuraEnabled(): Promise<boolean> {
+async function isEffectEnabled(): Promise<boolean> {
   try {
     const result = await browser.storage.sync.get(StorageKeys.GV_VISUAL_EFFECT);
     const value = result[StorageKeys.GV_VISUAL_EFFECT] as string;
-    return value === 'sakura';
+    return value === 'sakura' || value === 'snow';
   } catch {
     return false;
   }
@@ -106,8 +113,8 @@ export async function initializeVisualEffects(): Promise<void> {
   // Setup storage listener
   setupStorageListener();
 
-  // If Sakura is already enabled, initialize immediately
-  if (await isSakuraEnabled()) {
+  // If any effect is already enabled, initialize immediately
+  if (await isEffectEnabled()) {
     await initializeFullSystem();
   }
 }
