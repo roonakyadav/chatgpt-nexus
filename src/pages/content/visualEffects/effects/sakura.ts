@@ -15,7 +15,6 @@ class SakuraEffect implements VisualEffect {
 
   enable(): void {
     if (this.isEnabled) {
-      console.warn('[SakuraEffect] Already enabled, ignoring duplicate call');
       return;
     }
 
@@ -46,7 +45,6 @@ class SakuraEffect implements VisualEffect {
       window.addEventListener('resize', this.resizeListener);
 
       this.isEnabled = true;
-      console.warn('[SakuraEffect] Sakura enabled - petal animation started');
     } catch (error) {
       console.error('[SakuraEffect] Failed to enable:', error);
     }
@@ -54,7 +52,6 @@ class SakuraEffect implements VisualEffect {
 
   disable(): void {
     if (!this.isEnabled) {
-      console.warn('[SakuraEffect] Already disabled, ignoring duplicate call');
       return;
     }
 
@@ -75,7 +72,6 @@ class SakuraEffect implements VisualEffect {
       canvasManager.destroyCanvas();
 
       this.isEnabled = false;
-      console.warn('[SakuraEffect] Sakura disabled - animation stopped');
     } catch (error) {
       console.error('[SakuraEffect] Failed to disable:', error);
     }

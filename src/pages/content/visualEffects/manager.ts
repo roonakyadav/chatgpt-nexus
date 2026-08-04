@@ -81,7 +81,7 @@ class VisualEffectsManager {
 
     const effect = this.registry.get(effectId);
     if (!effect) {
-      console.warn(`[VisualEffectsManager] Effect "${effectId}" not found in registry.`);
+      console.error(`[VisualEffectsManager] Effect "${effectId}" not found in registry.`);
       return;
     }
 
@@ -110,7 +110,7 @@ class VisualEffectsManager {
 
     const effect = this.registry.get(effectId);
     if (!effect) {
-      console.warn(`[VisualEffectsManager] Effect "${effectId}" not found in registry.`);
+      console.error(`[VisualEffectsManager] Effect "${effectId}" not found in registry.`);
       return;
     }
 

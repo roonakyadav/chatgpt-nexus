@@ -13,7 +13,7 @@ export class VisualEffectsRegistry {
    */
   register(effect: VisualEffect): void {
     if (this.effects.has(effect.id)) {
-      console.warn(`[VisualEffectsRegistry] Effect with id "${effect.id}" is already registered. Overwriting.`);
+      // Silently overwrite existing effect
     }
     this.effects.set(effect.id, effect);
   }

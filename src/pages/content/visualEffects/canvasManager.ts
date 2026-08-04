@@ -14,7 +14,6 @@ class CanvasManager {
   createCanvas(): HTMLCanvasElement {
     // Check if canvas already exists
     if (this.canvas) {
-      console.warn('[CanvasManager] Canvas already exists, returning existing canvas');
       return this.canvas;
     }
 
@@ -23,7 +22,6 @@ class CanvasManager {
     if (existingCanvas) {
       this.canvas = existingCanvas;
       this.setupResizeListener();
-      console.warn('[CanvasManager] Found existing canvas in DOM, reusing it');
       return this.canvas;
     }
 
@@ -54,7 +52,6 @@ class CanvasManager {
     // Setup resize listener
     this.setupResizeListener();
 
-    console.log('[CanvasManager] Canvas created');
     return canvas;
   }
 
@@ -63,7 +60,6 @@ class CanvasManager {
    */
   destroyCanvas(): void {
     if (!this.canvas) {
-      console.warn('[CanvasManager] No canvas to destroy');
       return;
     }
 
@@ -76,8 +72,6 @@ class CanvasManager {
     // Remove canvas from DOM
     this.canvas.remove();
     this.canvas = null;
-
-    console.log('[CanvasManager] Canvas destroyed');
   }
 
   /**
@@ -85,7 +79,6 @@ class CanvasManager {
    */
   resizeCanvas(): void {
     if (!this.canvas) {
-      console.warn('[CanvasManager] No canvas to resize');
       return;
     }
 
@@ -98,7 +91,6 @@ class CanvasManager {
    */
   getContext(): CanvasRenderingContext2D | null {
     if (!this.canvas) {
-      console.warn('[CanvasManager] No canvas, cannot get context');
       return null;
     }
 

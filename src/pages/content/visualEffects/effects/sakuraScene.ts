@@ -238,7 +238,6 @@ export class SakuraScene {
 
   start(): void {
     if (this.animationFrameId !== null) {
-      console.warn('[SakuraScene] Animation already running');
       return;
     }
     this.animate();
