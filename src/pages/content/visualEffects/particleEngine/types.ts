@@ -32,6 +32,11 @@ export interface Particle {
   curveFrequency?: number;
   curvePhase?: number;
   verticalDrift?: number;
+  // Destination-based movement for insect-like behavior
+  destX?: number;
+  destY?: number;
+  flightSpeed?: number;
+  arrivalThreshold?: number;
 }
 
 export interface Splash {
